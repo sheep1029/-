@@ -4,124 +4,363 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>研创·智核 - InnoCore AI</title>
+    <title>InnoCore Research</title>
     <style>
+        :root {
+            --bg-0: #070a17;
+            --bg-1: #0b1028;
+            --surface: rgba(255, 255, 255, 0.86);
+            --surface-strong: rgba(255, 255, 255, 0.94);
+            --border: rgba(255, 255, 255, 0.55);
+            --text: #111827;
+            --muted: #475569;
+            --muted-2: #64748b;
+            --primary: #4f46e5;
+            --primary-2: #7c3aed;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --shadow-1: 0 8px 22px rgba(2, 6, 23, 0.18);
+            --shadow-2: 0 18px 55px rgba(2, 6, 23, 0.28);
+            --radius-sm: 10px;
+            --radius-md: 14px;
+            --radius-lg: 18px;
+            --ring: 0 0 0 4px rgba(79, 70, 229, 0.16);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-rendering: optimizeLegibility;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
             min-height: 100vh;
-            color: #333;
+            color: var(--text);
+            background:
+                radial-gradient(900px 520px at 12% 18%, rgba(79, 70, 229, 0.55), transparent 60%),
+                radial-gradient(820px 520px at 86% 18%, rgba(124, 58, 237, 0.45), transparent 55%),
+                radial-gradient(980px 620px at 50% 92%, rgba(56, 189, 248, 0.14), transparent 65%),
+                linear-gradient(180deg, var(--bg-0), var(--bg-1));
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .icon {
+            width: 1.1em;
+            height: 1.1em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        .icon svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .btn .icon {
+            margin-right: 0.5rem;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 28px 20px 44px;
         }
 
         header {
             text-align: center;
-            padding: 40px 0;
-            color: white;
+            padding: 44px 0 22px;
+            color: rgba(255, 255, 255, 0.92);
         }
 
         header h1 {
-            font-size: 3rem;
+            font-size: clamp(2.2rem, 4vw, 3.2rem);
+            letter-spacing: -0.02em;
             margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 18px 38px rgba(0, 0, 0, 0.35);
         }
 
         header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
+            font-size: 1.08rem;
+            color: rgba(255, 255, 255, 0.78);
+            max-width: 720px;
+            margin: 0 auto;
         }
 
         .main-content {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin-bottom: 30px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-radius: var(--radius-lg);
+            padding: 34px;
+            box-shadow: var(--shadow-2);
+            margin: 20px 0 30px;
+        }
+
+        .main-content h2 {
+            font-size: 1.35rem;
+            letter-spacing: -0.01em;
+            margin: 6px 0 16px;
+        }
+
+        .mode-banner {
+            margin: 18px 0 10px;
+            padding: 16px 16px;
+            background: rgba(79, 70, 229, 0.06);
+            border: 1px solid rgba(79, 70, 229, 0.18);
+            border-radius: var(--radius-md);
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .mode-banner-title {
+            min-width: 112px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.2;
+            margin-top: 2px;
+        }
+
+        .mode-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 14px;
+            align-items: center;
+        }
+
+        .mode-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            color: var(--muted);
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(2, 6, 23, 0.10);
+            background: rgba(255, 255, 255, 0.60);
+            transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+        }
+
+        .mode-option:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.78);
+            border-color: rgba(79, 70, 229, 0.28);
+        }
+
+        .mode-option input {
+            accent-color: var(--primary);
         }
 
         .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-top: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin-top: 18px;
         }
 
         .feature-card {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(2, 6, 23, 0.10);
+            padding: 22px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-1);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(420px 220px at 0% 0%, rgba(79, 70, 229, 0.14), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.18s ease;
+            pointer-events: none;
         }
 
         .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 18px 48px rgba(2, 6, 23, 0.18);
+            border-color: rgba(79, 70, 229, 0.24);
+            background: rgba(255, 255, 255, 0.86);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
         }
 
         .feature-card.active {
-            background: #e8f0fe;
-            border-left-color: #4285f4;
+            border-color: rgba(79, 70, 229, 0.40);
+            background: rgba(79, 70, 229, 0.07);
         }
 
         .feature-card h3 {
-            color: #667eea;
+            color: var(--text);
             margin-bottom: 10px;
-            font-size: 1.3rem;
+            font-size: 1.15rem;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .feature-card p {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 15px;
+            color: var(--muted);
+            line-height: 1.65;
+            margin-bottom: 14px;
+        }
+
+        .feature-card--workflow {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.92) 0%, rgba(124, 58, 237, 0.92) 55%, rgba(14, 165, 233, 0.70) 100%);
+            border-color: rgba(255, 255, 255, 0.24);
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        .feature-card--workflow h3,
+        .feature-card--workflow p {
+            color: rgba(255, 255, 255, 0.92);
         }
 
         .btn {
-            background: #667eea;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
+            appearance: none;
+            border: 1px solid rgba(2, 6, 23, 0.12);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+            color: rgba(255, 255, 255, 0.98);
+            padding: 10px 16px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: background 0.3s ease;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+            box-shadow: 0 10px 22px rgba(79, 70, 229, 0.22);
         }
 
         .btn:hover {
-            background: #5a6fd8;
+            transform: translateY(-1px);
+            filter: brightness(1.02);
+            box-shadow: 0 14px 28px rgba(79, 70, 229, 0.26);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:focus-visible {
+            outline: none;
+            box-shadow: var(--ring), 0 14px 28px rgba(79, 70, 229, 0.26);
         }
 
         .btn:disabled {
-            background: #ccc;
+            opacity: 0.55;
             cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-invert {
+            background: rgba(255, 255, 255, 0.92);
+            color: rgba(79, 70, 229, 0.95);
+            border-color: rgba(255, 255, 255, 0.44);
+            box-shadow: 0 18px 40px rgba(2, 6, 23, 0.18);
+        }
+
+        .btn-invert:hover {
+            filter: brightness(1.02);
+            box-shadow: 0 22px 50px rgba(2, 6, 23, 0.22);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: rgba(79, 70, 229, 0.95);
+            border: 1px solid rgba(79, 70, 229, 0.25);
+            box-shadow: none;
+        }
+
+        .btn-ghost:hover {
+            background: rgba(79, 70, 229, 0.06);
+            border-color: rgba(79, 70, 229, 0.36);
+            box-shadow: none;
+        }
+
+        .btn-workflow {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 22px 0 28px;
+            flex-wrap: wrap;
+        }
+
+        .nav-buttons a.btn {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .status {
-            background: #e8f5e8;
-            border: 1px solid #4caf50;
-            color: #2e7d32;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
+            background: rgba(22, 163, 74, 0.10);
+            border: 1px solid rgba(22, 163, 74, 0.25);
+            color: #065f46;
+            padding: 14px 14px;
+            border-radius: var(--radius-md);
+            margin: 10px 0 18px;
+            font-weight: 600;
+        }
+
+        .workflow-intro {
+            color: var(--muted);
+            margin-bottom: 16px;
+            line-height: 1.7;
+        }
+
+        .error {
+            background: rgba(220, 38, 38, 0.10);
+            border: 1px solid rgba(220, 38, 38, 0.20);
+            color: #7f1d1d;
+            padding: 14px;
+            border-radius: var(--radius-md);
+            margin: 10px 0;
+        }
+
+        .success {
+            background: rgba(22, 163, 74, 0.10);
+            border: 1px solid rgba(22, 163, 74, 0.20);
+            color: #065f46;
+            padding: 14px;
+            border-radius: var(--radius-md);
+            margin: 10px 0;
         }
 
         .interaction-panel {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 30px;
-            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(2, 6, 23, 0.10);
+            border-radius: var(--radius-lg);
+            padding: 26px;
+            margin-top: 22px;
+            box-shadow: var(--shadow-1);
             display: none;
         }
 
@@ -129,146 +368,94 @@
             display: block;
         }
 
+        .interaction-panel > .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .interaction-panel h3 {
+            font-size: 1.15rem;
+            letter-spacing: -0.01em;
+            margin-bottom: 12px;
+        }
+
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .input-group label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
+            font-weight: 700;
+            color: var(--text);
         }
 
         .input-group input,
         .input-group textarea,
         .input-group select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
+            padding: 12px 12px;
+            border: 1px solid rgba(2, 6, 23, 0.14);
+            border-radius: 12px;
             font-size: 1rem;
-            transition: border-color 0.3s ease;
+            background: rgba(255, 255, 255, 0.85);
+            transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
         }
 
         .input-group input:focus,
         .input-group textarea:focus,
         .input-group select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: rgba(79, 70, 229, 0.55);
+            box-shadow: var(--ring);
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .input-group textarea {
-            min-height: 120px;
+            min-height: 130px;
             resize: vertical;
         }
 
-        .response-area {
-            background: #f8f9fa;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            min-height: 200px;
-            max-height: 500px;
-            overflow-y: auto;
-            font-family: 'Consolas', 'Monaco', monospace;
+        .file-upload {
+            border: 1px dashed rgba(79, 70, 229, 0.55);
+            border-radius: 14px;
+            padding: 22px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(79, 70, 229, 0.04);
+            transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
         }
 
-        .response-area pre {
-            background: white;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 4px solid #667eea;
-            overflow-x: auto;
-            margin: 10px 0;
-            font-size: 0.9rem;
-            line-height: 1.6;
+        .file-upload:hover {
+            transform: translateY(-1px);
+            background: rgba(79, 70, 229, 0.07);
+            border-color: rgba(79, 70, 229, 0.75);
         }
 
-        .paper-card {
-            background: white;
-            border: 1px solid #e1e5e9;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 15px 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        .file-upload.dragover {
+            background: rgba(79, 70, 229, 0.10);
+            border-color: rgba(79, 70, 229, 0.85);
         }
 
-        .paper-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .paper-card h4 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-            line-height: 1.4;
-        }
-
-        .paper-card .authors {
-            color: #666;
-            font-size: 0.9rem;
-            margin: 8px 0;
-        }
-
-        .paper-card .abstract {
-            color: #444;
-            line-height: 1.6;
-            margin: 12px 0;
-            font-size: 0.95rem;
-        }
-
-        .paper-card .meta {
-            display: flex;
-            gap: 15px;
-            margin-top: 12px;
-            font-size: 0.85rem;
-            color: #888;
-        }
-
-        .paper-card .meta span {
+        .toggle {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 10px;
+            font-weight: 700;
+            color: var(--text);
+            user-select: none;
+            cursor: pointer;
         }
 
-        .paper-card a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .paper-card a:hover {
-            text-decoration: underline;
-        }
-
-        .result-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px 8px 0 0;
-            margin: -20px -20px 20px -20px;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .result-stats {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
+        .toggle input {
+            accent-color: var(--primary);
         }
 
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
-            color: #667eea;
+            padding: 16px 0 6px;
+            color: var(--muted);
         }
 
         .loading.active {
@@ -276,11 +463,11 @@
         }
 
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border: 3px solid rgba(2, 6, 23, 0.10);
+            border-top: 3px solid rgba(79, 70, 229, 0.95);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             animation: spin 1s linear infinite;
             margin: 0 auto 10px;
         }
@@ -295,196 +482,376 @@
             }
         }
 
-        .error {
-            background: #ffebee;
-            border: 1px solid #f44336;
-            color: #c62828;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
+        .response-area {
+            background: rgba(255, 255, 255, 0.70);
+            border: 1px solid rgba(2, 6, 23, 0.12);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            margin-top: 16px;
+            min-height: 200px;
+            max-height: 520px;
+            overflow-y: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+            color: var(--text);
         }
 
-        .success {
-            background: #e8f5e8;
-            border: 1px solid #4caf50;
-            color: #2e7d32;
-            padding: 15px;
-            border-radius: 8px;
+        .response-area pre {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(2, 6, 23, 0.10);
+            padding: 14px;
+            border-radius: 14px;
+            overflow-x: auto;
             margin: 10px 0;
+            font-size: 0.92rem;
+            line-height: 1.65;
+            box-shadow: 0 10px 22px rgba(2, 6, 23, 0.10);
         }
 
-        .nav-buttons {
+        .result-header {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.95) 0%, rgba(124, 58, 237, 0.90) 70%);
+            color: rgba(255, 255, 255, 0.96);
+            padding: 14px 16px;
+            border-radius: 14px 14px 0 0;
+            margin: -18px -18px 14px -18px;
+            font-weight: 800;
             display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin: 30px 0;
+            justify-content: space-between;
+            align-items: center;
+            letter-spacing: -0.01em;
+        }
+
+        .result-stats {
+            background: rgba(255, 255, 255, 0.18);
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .paper-card {
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(2, 6, 23, 0.10);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            margin: 14px 0;
+            transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+            box-shadow: var(--shadow-1);
+        }
+
+        .paper-card:hover {
+            box-shadow: 0 18px 50px rgba(2, 6, 23, 0.18);
+            transform: translateY(-2px);
+            border-color: rgba(79, 70, 229, 0.22);
+        }
+
+        .paper-card h4 {
+            color: var(--text);
+            margin-bottom: 10px;
+            font-size: 1.05rem;
+            line-height: 1.45;
+            letter-spacing: -0.01em;
+        }
+
+        .paper-card .authors {
+            color: var(--muted);
+            font-size: 0.92rem;
+            margin: 8px 0;
+        }
+
+        .paper-card .abstract {
+            color: #1f2937;
+            line-height: 1.7;
+            margin: 12px 0;
+            font-size: 0.96rem;
+        }
+
+        .paper-card .meta {
+            display: flex;
+            gap: 14px;
+            margin-top: 12px;
+            font-size: 0.86rem;
+            color: var(--muted-2);
             flex-wrap: wrap;
         }
 
-        .nav-buttons .btn {
-            padding: 12px 25px;
-            font-size: 1rem;
+        .paper-card .meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .paper-card pre {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(2, 6, 23, 0.10);
+            padding: 14px;
+            border-radius: 14px;
+            overflow-x: auto;
+            margin: 10px 0 0;
+            font-size: 0.92rem;
+            line-height: 1.65;
+            box-shadow: 0 10px 22px rgba(2, 6, 23, 0.08);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .paper-card a {
+            color: var(--primary);
             text-decoration: none;
-            display: inline-block;
+            font-weight: 700;
         }
 
-        .file-upload {
-            border: 2px dashed #667eea;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .file-upload:hover {
-            background: #f8f9ff;
-        }
-
-        .file-upload.dragover {
-            background: #e8f0fe;
-            border-color: #4285f4;
+        .paper-card a:hover {
+            text-decoration: underline;
         }
 
         .copy-btn {
             float: right;
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid #667eea;
-            color: #667eea;
-            padding: 5px 12px;
-            border-radius: 4px;
+            background: rgba(79, 70, 229, 0.08);
+            border: 1px solid rgba(79, 70, 229, 0.25);
+            color: rgba(79, 70, 229, 0.95);
+            padding: 6px 12px;
+            border-radius: 999px;
             cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.3s ease;
+            font-size: 0.86rem;
+            font-weight: 700;
+            transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
             margin-left: 10px;
         }
 
         .copy-btn:hover {
-            background: #667eea;
-            color: white;
+            transform: translateY(-1px);
+            background: rgba(79, 70, 229, 0.14);
+            border-color: rgba(79, 70, 229, 0.40);
+        }
+
+        .copy-btn:focus-visible {
+            outline: none;
+            box-shadow: var(--ring);
         }
 
         .empty-state {
             text-align: center;
-            padding: 40px 20px;
-            color: #999;
-            font-size: 1.1rem;
+            padding: 34px 16px;
+            color: var(--muted-2);
+            font-size: 1.05rem;
         }
 
         .badge {
             display: inline-block;
             padding: 4px 10px;
-            border-radius: 12px;
+            border-radius: 999px;
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 800;
             margin-left: 8px;
         }
 
         .badge-success {
-            background: #e8f5e8;
-            color: #2e7d32;
+            background: rgba(22, 163, 74, 0.12);
+            color: #166534;
         }
 
         .badge-info {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: rgba(14, 165, 233, 0.14);
+            color: #075985;
         }
 
         .badge-warning {
-            background: #fff3e0;
-            color: #f57c00;
+            background: rgba(245, 158, 11, 0.16);
+            color: #92400e;
         }
 
         .json-key {
-            color: #0066cc;
-            font-weight: 600;
+            color: #1d4ed8;
+            font-weight: 800;
         }
 
         .json-string {
-            color: #008000;
+            color: #15803d;
         }
 
         .json-number {
-            color: #ff6600;
+            color: #c2410c;
         }
 
         .json-boolean {
-            color: #cc00cc;
-            font-weight: 600;
+            color: #7c3aed;
+            font-weight: 800;
         }
 
         .json-null {
-            color: #999;
+            color: var(--muted-2);
             font-style: italic;
         }
 
         .markdown-content {
-            line-height: 1.8;
-            color: #333;
+            line-height: 1.85;
+            color: #0f172a;
         }
 
         .markdown-content h1,
         .markdown-content h2,
         .markdown-content h3 {
-            color: #667eea;
-            margin-top: 20px;
+            color: #0f172a;
+            margin-top: 18px;
             margin-bottom: 10px;
+            letter-spacing: -0.01em;
+        }
+
+        .markdown-content h1 {
+            font-size: 1.35rem;
+        }
+
+        .markdown-content h2 {
+            font-size: 1.2rem;
+        }
+
+        .markdown-content h3 {
+            font-size: 1.08rem;
         }
 
         .markdown-content ul {
             list-style-type: disc;
-            padding-left: 25px;
-            margin: 15px 0;
+            padding-left: 22px;
+            margin: 12px 0;
         }
 
         .markdown-content li {
-            margin: 10px 0;
+            margin: 8px 0;
             line-height: 1.8;
         }
 
         .markdown-content strong {
-            color: #333;
-            font-weight: 600;
+            color: #0f172a;
+            font-weight: 800;
         }
 
         .markdown-content code {
-            background: #f0f0f0;
+            background: rgba(2, 6, 23, 0.06);
             padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            color: #e83e8c;
-            font-size: 0.9em;
+            border-radius: 6px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+            color: #be185d;
+            font-size: 0.92em;
         }
 
         .markdown-content pre {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 6px;
+            background: rgba(2, 6, 23, 0.04);
+            padding: 14px;
+            border-radius: 14px;
             overflow-x: auto;
-            border-left: 4px solid #667eea;
-            margin: 15px 0;
+            border: 1px solid rgba(2, 6, 23, 0.10);
+            margin: 14px 0;
         }
 
         .markdown-content pre code {
             background: none;
             padding: 0;
-            color: #333;
+            color: #0f172a;
         }
 
         .markdown-content a {
-            color: #667eea;
+            color: var(--primary);
             text-decoration: none;
-            border-bottom: 1px solid #667eea;
+            border-bottom: 1px solid rgba(79, 70, 229, 0.35);
         }
 
         .markdown-content a:hover {
-            color: #5a6fd8;
-            border-bottom-color: #5a6fd8;
+            border-bottom-color: rgba(79, 70, 229, 0.65);
         }
 
         .markdown-content p {
-            margin: 12px 0;
-            line-height: 1.8;
+            margin: 10px 0;
+            line-height: 1.85;
+        }
+
+        @media (max-width: 720px) {
+            .container {
+                padding: 18px 14px 30px;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .mode-banner {
+                flex-direction: column;
+            }
+
+            .mode-banner-title {
+                min-width: auto;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --surface: rgba(15, 23, 42, 0.68);
+                --surface-strong: rgba(15, 23, 42, 0.80);
+                --border: rgba(148, 163, 184, 0.16);
+                --text: rgba(226, 232, 240, 0.96);
+                --muted: rgba(203, 213, 225, 0.78);
+                --muted-2: rgba(203, 213, 225, 0.65);
+                --ring: 0 0 0 4px rgba(99, 102, 241, 0.28);
+            }
+
+            .main-content,
+            .interaction-panel,
+            .feature-card,
+            .paper-card,
+            .response-area {
+                background: var(--surface);
+                border-color: var(--border);
+            }
+
+            .mode-banner {
+                background: rgba(99, 102, 241, 0.10);
+                border-color: rgba(99, 102, 241, 0.22);
+            }
+
+            .mode-option {
+                background: rgba(15, 23, 42, 0.55);
+                border-color: rgba(148, 163, 184, 0.18);
+                color: var(--muted);
+            }
+
+            .btn-ghost {
+                color: rgba(165, 180, 252, 0.95);
+                border-color: rgba(165, 180, 252, 0.25);
+            }
+
+            .btn-ghost:hover {
+                background: rgba(99, 102, 241, 0.10);
+                border-color: rgba(165, 180, 252, 0.38);
+            }
+
+            .input-group input,
+            .input-group textarea,
+            .input-group select {
+                background: rgba(15, 23, 42, 0.55);
+                border-color: rgba(148, 163, 184, 0.18);
+                color: var(--text);
+            }
+
+            .markdown-content {
+                color: var(--text);
+            }
+
+            .markdown-content strong,
+            .markdown-content h1,
+            .markdown-content h2,
+            .markdown-content h3 {
+                color: var(--text);
+            }
+
+            .status,
+            .success {
+                color: rgba(134, 239, 172, 0.95);
+            }
+
+            .error {
+                color: rgba(254, 202, 202, 0.95);
+            }
         }
     </style>
 </head>
@@ -492,82 +859,110 @@
 <body>
     <div class="container">
         <header>
-            <h1>🧠 研创·智核</h1>
-            <p>基于多智能体架构的智能科研助手平台</p>
+            <h1>InnoCore Research</h1>
+            <p>基于多智能体协作的智能科研创新助手平台</p>
         </header>
 
         <main class="main-content">
             <div class="status" id="systemStatus">
-                ✅ 系统初始化中...
+                正在检查系统状态...
             </div>
 
             <div class="nav-buttons">
-                <a href="/docs" class="btn" target="_blank">📚 API 文档</a>
-                <a href="/health" class="btn" target="_blank">🔍 健康检查</a>
+                <a href="/docs" class="btn btn-ghost" target="_blank">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                            <path d="M8 6h8" />
+                            <path d="M8 10h8" />
+                        </svg>
+                    </span>
+                    <span>接口文档</span>
+                </a>
+                <a href="/health" class="btn btn-ghost" target="_blank">🩺 健康检查</a>
                 <button class="btn" onclick="checkSystemStatus()">🔄 刷新状态</button>
             </div>
 
             <section>
-                <h2>🚀 核心功能</h2>
+                <h2>核心功能</h2>
 
                 <!-- 工作流模式选择 -->
-                <div
-                    style="margin-bottom: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #667eea;">
-                    <h3 style="margin: 0 0 10px 0; color: #667eea;">🔄 工作模式</h3>
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="radio" name="work-mode" value="individual" checked style="margin-right: 8px;">
-                            <span>单独模式 - 独立使用每个智能体</span>
+                <div class="mode-banner">
+                    <div class="mode-banner-title">工作模式</div>
+                    <div class="mode-options">
+                        <label class="mode-option">
+                            <input type="radio" name="work-mode" value="individual" checked>
+                            <span>单体模式：分别使用每个智能体</span>
                         </label>
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="radio" name="work-mode" value="workflow" style="margin-right: 8px;">
-                            <span>协调模式 - 自动化完整工作流 ⭐</span>
+                        <label class="mode-option">
+                            <input type="radio" name="work-mode" value="workflow">
+                            <span>协同模式：自动化完整流程（推荐）</span>
                         </label>
                     </div>
                 </div>
 
                 <div class="features">
-                    <div class="feature-card" onclick="activateAgent('workflow')" id="workflow-card"
-                        style="display: none; grid-column: 1 / -1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                        <h3>🔄 完整工作流</h3>
-                        <p>自动协调所有智能体：搜索论文 → 深度分析 → 生成引用 → 撰写报告</p>
-                        <button class="btn" style="background: white; color: #667eea;"
-                            onclick="event.stopPropagation(); activateAgent('workflow')">启动工作流</button>
+                    <div class="feature-card feature-card--workflow" onclick="activateAgent('workflow')" id="workflow-card"
+                        style="display: none;">
+                        <h3>🧩 协同工作流</h3>
+                        <p>自动协调多个智能体：检索论文 → 深度分析 → 生成引用 → 输出报告</p>
+                        <button class="btn btn-invert"
+                            onclick="event.stopPropagation(); activateAgent('workflow')">进入工作流</button>
                     </div>
 
                     <div class="feature-card" onclick="activateAgent('hunter')" id="hunter-card">
-                        <h3>🕵️ Hunter Agent</h3>
-                        <p>智能文献搜索与监控，自动抓取 ArXiv、IEEE 等平台的最新论文</p>
-                        <button class="btn" onclick="event.stopPropagation(); activateAgent('hunter')">开始搜索</button>
+                        <h3>
+                            <span class="icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="7" />
+                                    <path d="M21 21l-4.35-4.35" />
+                                </svg>
+                            </span>
+                            <span>Hunter（文献检索）</span>
+                        </h3>
+                        <p>智能检索与追踪最新研究，支持 ArXiv、IEEE 等主流来源</p>
+                        <button class="btn" onclick="event.stopPropagation(); activateAgent('hunter')">开始检索</button>
                     </div>
 
                     <div class="feature-card" onclick="activateAgent('miner')" id="miner-card">
-                        <h3>🧠 Miner Agent</h3>
-                        <p>深度论文分析，挖掘创新点，生成结构化研究报告</p>
+                        <h3>📊 Miner（论文分析）</h3>
+                        <p>深度解析论文内容，提炼关键结论与创新点，输出结构化报告</p>
                         <button class="btn" onclick="event.stopPropagation(); activateAgent('miner')">分析论文</button>
                     </div>
 
                     <div class="feature-card" onclick="activateAgent('coach')" id="coach-card">
-                        <h3>✍️ Coach Agent</h3>
-                        <p>个性化写作助手，提供学术润色、风格迁移和实时指导</p>
-                        <button class="btn" onclick="event.stopPropagation(); activateAgent('coach')">写作助手</button>
+                        <h3>✍️ Coach（写作助手）</h3>
+                        <p>学术写作辅助：润色、风格调整、翻译与内容扩写</p>
+                        <button class="btn" onclick="event.stopPropagation(); activateAgent('coach')">开始写作</button>
                     </div>
 
                     <div class="feature-card" onclick="activateAgent('validator')" id="validator-card">
-                        <h3>🔎 Validator Agent</h3>
-                        <p>引用格式校验，确保学术引用的准确性和标准化</p>
-                        <button class="btn" onclick="event.stopPropagation(); activateAgent('validator')">校验引用</button>
+                        <h3>🧾 Validator（引用校验）</h3>
+                        <p>引用信息解析与格式化，输出 BibTeX/APA/IEEE 等标准格式</p>
+                        <button class="btn" onclick="event.stopPropagation(); activateAgent('validator')">校验与格式化</button>
                     </div>
                 </div>
             </section>
 
             <!-- Hunter Agent 交互面板 -->
             <div class="interaction-panel" id="hunter-panel">
-                <h3>🕵️ 文献搜索</h3>
+                <h3>
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="7" />
+                            <path d="M21 21l-4.35-4.35" />
+                        </svg>
+                    </span>
+                    <span>文献检索</span>
+                </h3>
                 <div class="input-group">
                     <label for="search-keywords">搜索关键词</label>
                     <input type="text" id="search-keywords"
-                        placeholder="例如: machine learning, natural language processing">
+                        placeholder="例如：machine learning, natural language processing">
                 </div>
                 <div class="input-group">
                     <label for="search-source">搜索来源</label>
@@ -579,10 +974,10 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label for="search-limit">论文数量限制</label>
+                    <label for="search-limit">最大返回数量</label>
                     <input type="number" id="search-limit" value="10" min="1" max="50">
                 </div>
-                <button class="btn" onclick="executeHunterTask()">开始搜索</button>
+                <button class="btn" onclick="executeHunterTask()">开始检索</button>
                 <div class="loading" id="hunter-loading">
                     <div class="spinner"></div>
                     <p>正在搜索论文...</p>
@@ -592,16 +987,16 @@
 
             <!-- Miner Agent 交互面板 -->
             <div class="interaction-panel" id="miner-panel">
-                <h3>🧠 论文分析</h3>
+                <h3>📊 论文分析</h3>
                 <div class="input-group">
                     <label for="paper-upload">上传论文 (PDF)</label>
                     <div class="file-upload" id="paper-upload-area">
-                        <p>📄 点击或拖拽PDF文件到此处</p>
+                        <p>📄 点击或拖拽 PDF 文件到此处</p>
                         <input type="file" id="paper-file" accept=".pdf" style="display: none;">
                     </div>
                 </div>
                 <div class="input-group">
-                    <label for="paper-url">或输入论文URL</label>
+                    <label for="paper-url">或输入论文链接</label>
                     <input type="url" id="paper-url" placeholder="https://arxiv.org/abs/...">
                 </div>
                 <div class="input-group">
@@ -625,8 +1020,8 @@
             <div class="interaction-panel" id="coach-panel">
                 <h3>✍️ 写作助手</h3>
                 <div class="input-group">
-                    <label for="writing-text">您的文本</label>
-                    <textarea id="writing-text" placeholder="请输入需要润色的学术文本..."></textarea>
+                    <label for="writing-text">原始文本</label>
+                    <textarea id="writing-text" placeholder="请输入需要处理的学术文本..."></textarea>
                 </div>
                 <div class="input-group">
                     <label for="writing-style">写作风格</label>
@@ -640,10 +1035,10 @@
                 <div class="input-group">
                     <label for="writing-task">任务类型</label>
                     <select id="writing-task">
-                        <option value="polish">润色改进</option>
-                        <option value="translate">中译英</option>
-                        <option value="explain">解释概念</option>
-                        <option value="expand">内容扩展</option>
+                        <option value="polish">润色优化</option>
+                        <option value="translate">翻译（中译英）</option>
+                        <option value="explain">概念解释</option>
+                        <option value="expand">内容扩写</option>
                     </select>
                 </div>
                 <button class="btn" onclick="executeCoachTask()">开始处理</button>
@@ -656,7 +1051,7 @@
 
             <!-- Validator Agent 交互面板 -->
             <div class="interaction-panel" id="validator-panel">
-                <h3>🔎 引用校验</h3>
+                <h3>🧾 引用校验与格式化</h3>
                 <div class="input-group">
                     <label for="citation-input">引用信息</label>
                     <textarea id="citation-input" placeholder="请输入引用信息，可以是DOI、标题、或BibTeX格式..."></textarea>
@@ -670,7 +1065,7 @@
                         <option value="mla">MLA</option>
                     </select>
                 </div>
-                <button class="btn" onclick="executeValidatorTask()">校验引用</button>
+                <button class="btn" onclick="executeValidatorTask()">开始校验</button>
                 <div class="loading" id="validator-loading">
                     <div class="spinner"></div>
                     <p>正在校验引用...</p>
@@ -680,8 +1075,8 @@
 
             <!-- Workflow 协调面板 -->
             <div class="interaction-panel" id="workflow-panel">
-                <h3>🔄 完整工作流</h3>
-                <p style="color: #666; margin-bottom: 20px;">自动协调所有智能体完成完整的研究流程</p>
+                <h3>🧩 协同工作流</h3>
+                <p class="workflow-intro">自动协调多个智能体，完成“检索 → 分析 → 引用 → 报告”的完整研究流程。</p>
 
                 <div class="input-group">
                     <label for="workflow-keywords">研究关键词</label>
@@ -718,14 +1113,13 @@
                 </div>
 
                 <div class="input-group">
-                    <label>
+                    <label class="toggle">
                         <input type="checkbox" id="workflow-generate-report" checked>
                         生成综合报告
                     </label>
                 </div>
 
-                <button class="btn" onclick="executeWorkflow()"
-                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🚀 启动完整工作流</button>
+                <button class="btn btn-workflow" onclick="executeWorkflow()">启动协同工作流</button>
 
                 <div class="loading" id="workflow-loading">
                     <div class="spinner"></div>
@@ -771,13 +1165,13 @@
 
                 if (response.ok) {
                     statusDiv.className = 'status';
-                    statusDiv.innerHTML = `✅ 系统运行正常 | 状态: ${data.status} | 时间: ${new Date().toLocaleString()}`;
+                    statusDiv.innerHTML = `系统状态：正常（${data.status}）｜${new Date().toLocaleString()}`;
                 } else {
                     throw new Error('系统状态异常');
                 }
             } catch (error) {
                 statusDiv.className = 'error';
-                statusDiv.innerHTML = `❌ 系统连接失败: ${error.message}`;
+                statusDiv.innerHTML = `系统连接失败：${error.message}`;
             }
         }
 
@@ -986,7 +1380,7 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    showSuccess('workflow-response', '🎉 工作流执行完成！', data);
+                    showSuccess('workflow-response', '工作流执行完成', data);
                 } else {
                     showError('workflow-response', data.detail || '工作流执行失败');
                 }
@@ -1055,20 +1449,20 @@
                         <div class="paper-card">
                             <h4>📄 ${data.title || file.name}</h4>
                             <div class="authors">
-                                👥 作者: ${data.authors ? data.authors.join(', ') : '未知'}
+                                👥 作者：${data.authors ? data.authors.join(', ') : '未知'}
                             </div>
                             <div class="abstract">
-                                📝 ${data.abstract || '无摘要'}
+                                📝 ${data.abstract || '暂无摘要'}
                             </div>
                             <div class="meta">
                                 <span>📄 ${data.page_count || 0} 页</span>
-                                <span>📊 ${data.word_count || 0} 词</span>
-                                <span>✅ 已解析</span>
+                                <span>� ${data.word_count || 0} 词</span>
+                                <span>✅ 解析完成</span>
                             </div>
                         </div>
                     `;
 
-                    showSuccess('miner-response', '✅ PDF 文件上传并解析成功！现在可以选择分析类型并开始分析。', {
+                    showSuccess('miner-response', 'PDF 文件上传并解析成功，现在可以选择分析类型并开始分析。', {
                         upload_info: uploadInfo
                     });
                 } else {
@@ -1095,7 +1489,7 @@
         function showSuccess(responseId, message, data = null) {
             const responseDiv = document.getElementById(responseId);
 
-            let content = `<div class="success">✅ ${message}</div>`;
+            let content = `<div class="success">${message}</div>`;
 
             if (data) {
                 // 工作流结果
@@ -1142,8 +1536,8 @@
         function formatPaperResults(data) {
             let html = `
                 <div class="result-header">
-                    <span>📚 搜索结果</span>
-                    <span class="result-stats">共找到 ${data.papers.length} 篇论文</span>
+                    <span>� 检索结果</span>
+                    <span class="result-stats">共 ${data.papers.length} 篇</span>
                 </div>
             `;
 
@@ -1152,7 +1546,7 @@
                     <div class="paper-card">
                         <h4>${index + 1}. ${escapeHtml(paper.title)}</h4>
                         <div class="authors">
-                            👥 作者: ${paper.authors.join(', ')}
+                            👥 作者：${paper.authors.join(', ')}
                         </div>
                         <div class="abstract">
                             📝 ${escapeHtml(paper.abstract)}
@@ -1174,7 +1568,7 @@
         function formatAnalysisResult(data) {
             let html = `
                 <div class="result-header">
-                    <span>🧠 论文分析</span>
+                    <span>📊 分析结果</span>
                     <span class="result-stats">${data.analysis_type}</span>
                 </div>
             `;
@@ -1184,7 +1578,7 @@
                     <div class="paper-card">
                         <h4>${escapeHtml(data.paper_info.title)}</h4>
                         <div class="authors">
-                            👥 作者: ${data.paper_info.authors.join(', ')}
+                            👥 作者：${data.paper_info.authors.join(', ')}
                         </div>
                         <div class="meta">
                             <span>📅 ${data.paper_info.published_date}</span>
@@ -1197,7 +1591,7 @@
 
             const analysisId = 'analysis-' + Date.now();
             html += '<div class="paper-card">';
-            html += '<h4>📊 分析结果 <button class="copy-btn" onclick="copyToClipboard(\'' + analysisId + '\', event)" style="float: right;">📋 复制</button></h4>';
+            html += '<h4>分析内容 <button class="copy-btn" onclick="copyToClipboard(\'' + analysisId + '\', event)">复制</button></h4>';
             html += '<div class="markdown-content" id="' + analysisId + '">';
             html += renderMarkdown(data.analysis);
             html += '</div>';
@@ -1338,8 +1732,8 @@
         function formatWritingResult(data) {
             let html = `
                 <div class="result-header">
-                    <span>✍️ 写作助手</span>
-                    <span class="result-stats">${data.task} - ${data.style}</span>
+                    <span>✍️ 写作结果</span>
+                    <span class="result-stats">任务：${data.task}｜风格：${data.style}</span>
                 </div>
             `;
 
@@ -1356,7 +1750,7 @@
 
             const resultId = 'writing-result-' + Date.now();
             html += '<div class="paper-card">';
-            html += '<h4>✨ 处理结果 <button class="copy-btn" onclick="copyToClipboard(\'' + resultId + '\', event)" style="float: right;">📋 复制</button></h4>';
+            html += '<h4>处理结果 <button class="copy-btn" onclick="copyToClipboard(\'' + resultId + '\', event)">复制</button></h4>';
             html += '<div class="markdown-content" id="' + resultId + '">';
             html += renderMarkdown(data.result);
             html += '</div>';
@@ -1371,8 +1765,8 @@
             const jsonId = 'citation-' + Date.now();
             let html = `
                 <div class="result-header">
-                    <span>🔎 引用校验</span>
-                    <span class="result-stats">${data.format.toUpperCase()} ${data.verified ? '✅ 已验证' : '⚠️ 未验证'}</span>
+                    <span>🧾 引用校验与格式化</span>
+                    <span class="result-stats">${data.format.toUpperCase()}｜${data.verified ? '已验证' : '未验证'}</span>
                 </div>
             `;
 
@@ -1415,10 +1809,10 @@
                     <div class="paper-card">
                         <h4>📄 论文信息</h4>
                         <div class="authors">
-                            📖 标题: ${escapeHtml(title)}
+                            📖 标题：${escapeHtml(title)}
                         </div>
                         <div class="authors">
-                            👥 作者: ${escapeHtml(authors)}
+                            👥 作者：${escapeHtml(authors)}
                         </div>
                         <div class="meta">
                             <span>📅 ${year}</span>
@@ -1432,8 +1826,8 @@
 
             html += `
                 <div class="paper-card">
-                    <h4>📋 格式化引用 <button class="copy-btn" onclick="copyToClipboard('${jsonId}', event)" style="float: right;">📋 复制</button></h4>
-                    <pre id="${jsonId}" style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #667eea; overflow-x: auto;">${escapeHtml(data.formatted_citation)}</pre>
+                    <h4>📋 格式化引用 <button class="copy-btn" onclick="copyToClipboard('${jsonId}', event)">复制</button></h4>
+                    <pre id="${jsonId}">${escapeHtml(data.formatted_citation)}</pre>
                 </div>
             `;
 
@@ -1452,8 +1846,8 @@
         function formatWorkflowResult(data) {
             let html = `
                 <div class="result-header">
-                    <span>🔄 工作流执行结果</span>
-                    <span class="result-stats">${data.status === 'completed' ? '✅ 完成' : '⚠️ 部分完成'}</span>
+                    <span>🧩 工作流结果</span>
+                    <span class="result-stats">${data.status === 'completed' ? '已完成' : '部分完成'}</span>
                 </div>
             `;
 
@@ -1467,7 +1861,7 @@
                             <span>🧠 分析 ${data.summary.analyzed_papers} 篇</span>
                             <span>📝 生成 ${data.summary.generated_citations} 条引用</span>
                         </div>
-                        <p style="margin-top: 10px; color: #666;">关键词: ${data.summary.keywords}</p>
+                        <p class="muted" style="margin-top: 10px;">关键词：${data.summary.keywords}</p>
                     </div>
                 `;
             }
@@ -1591,9 +1985,10 @@
                 if (btn) {
                     const originalText = btn.textContent;
                     btn.textContent = '✅ 已复制';
-                    btn.style.background = '#4caf50';
+                    btn.textContent = '已复制';
+                    btn.style.background = '#16a34a';
                     btn.style.color = 'white';
-                    btn.style.borderColor = '#4caf50';
+                    btn.style.borderColor = '#16a34a';
 
                     setTimeout(() => {
                         btn.textContent = originalText;
@@ -1614,7 +2009,7 @@
             const responseDiv = document.getElementById(responseId);
             responseDiv.innerHTML = `
                 <div class="error">
-                    ❌ ${message}
+                    ${message}
                 </div>
             `;
         }

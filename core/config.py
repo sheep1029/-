@@ -80,7 +80,7 @@ class InnoCoreConfig:
     """InnoCore AI 主配置类"""
     
     # 基础配置
-    app_name: str = "InnoCore AI"
+    app_name: str = "InnoCore Research"
     debug: bool = False
     log_level: str = "INFO"
     

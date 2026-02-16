@@ -64,7 +64,7 @@ async def lifespan(app: FastAPI):
 
 # 创建FastAPI应用
 app = FastAPI(
-    title="InnoCore AI API",
+    title="InnoCore Research API",
     description="智能科研创新助手API",
     version="0.1.0",
     lifespan=lifespan
@@ -110,7 +110,7 @@ async def root():
     if os.path.exists(index_path):
         return FileResponse(index_path)
     return {
-        "message": "Welcome to InnoCore AI API",
+        "message": "Welcome to InnoCore Research API",
         "version": "0.1.0",
         "status": "running"
     }

@@ -1,4 +1,4 @@
-# InnoCore AI - 研创·智核
+# InnoCore Research - 研创·智研
 
 <div align="center">
 
@@ -20,7 +20,7 @@
 
 ## 📖 项目简介
 
-InnoCore AI（研创·智核）是一个基于 HelloAgent 框架构建的智能科研创新助手系统。通过多智能体协作，实现从论文搜索、深度分析、写作辅助到引用校验的科研全流程自动化。
+InnoCore Research（研创·智研）是一个基于 HelloAgent 框架构建的智能科研创新助手系统。通过多智能体协作，实现从论文搜索、深度分析、写作辅助到引用校验的科研全流程自动化。
 
 ### 核心特性
 
@@ -261,6 +261,6 @@ python run.py
 
 **如果这个项目对你有帮助，请给一个 ⭐️ Star！**
 
-Made with ❤️ by InnoCore AI Team
+Made with ❤️ by InnoCore Research Team
 
 </div>

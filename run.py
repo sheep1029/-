@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 InnoCore AI - Simple Run Script
-研创·智核 - 简单运行脚本
+研创·智研 - 简单运行脚本
 """
 
 import os
@@ -10,18 +10,18 @@ import uvicorn
 from pathlib import Path
 
 def main():
-    """Run the full InnoCore AI application"""
-    print("Starting InnoCore AI...")
-    
+    """Run the full InnoCore Research application"""
+    print("Starting InnoCore Research...")
+
     # Add current directory to Python path
     current_dir = Path(__file__).parent
     sys.path.insert(0, str(current_dir))
-    
+
     # Start server with the full API
     print("Server will be available at: http://localhost:8000")
     print("API docs at: http://localhost:8000/docs")
     print("Health check at: http://localhost:8000/health")
-    
+
     uvicorn.run(
         "api.main:app",
         host="0.0.0.0",

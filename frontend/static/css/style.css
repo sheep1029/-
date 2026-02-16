@@ -1,18 +1,22 @@
 /* 研创·智核 - 主样式文件 */
 
 :root {
-    --primary-color: #2563eb;
+    --primary-color: #4f46e5;
     --secondary-color: #7c3aed;
-    --success-color: #10b981;
+    --success-color: #16a34a;
     --warning-color: #f59e0b;
-    --danger-color: #ef4444;
-    --dark-color: #1f2937;
-    --light-color: #f9fafb;
+    --danger-color: #dc2626;
+    --dark-color: #0f172a;
+    --light-color: #f6f7fb;
     --border-color: #e5e7eb;
-    --text-muted: #6b7280;
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --text-muted: #64748b;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --ring: 0 0 0 3px rgba(79, 70, 229, 0.14);
+    --shadow-sm: 0 1px 2px rgba(2, 6, 23, 0.06);
+    --shadow-md: 0 10px 24px rgba(2, 6, 23, 0.10);
+    --shadow-lg: 0 22px 60px rgba(2, 6, 23, 0.16);
 }
 
 * {
@@ -26,6 +30,11 @@ body {
     line-height: 1.6;
     color: var(--dark-color);
     background-color: var(--light-color);
+    text-rendering: optimizeLegibility;
+}
+
+a {
+    color: inherit;
 }
 
 /* 布局 */
@@ -54,7 +63,9 @@ body {
 
 /* 导航 */
 .navbar {
-    background: white;
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-color);
     padding: 1rem 0;
     box-shadow: var(--shadow-sm);
@@ -111,10 +122,11 @@ body {
 /* 卡片 */
 .card {
     background: white;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     overflow: hidden;
     margin-bottom: 1.5rem;
+    border: 1px solid rgba(2, 6, 23, 0.06);
 }
 
 .card-header {
@@ -145,7 +157,7 @@ body {
     justify-content: center;
     padding: 0.5rem 1rem;
     border: 1px solid transparent;
-    border-radius: 0.375rem;
+    border-radius: 0.75rem;
     font-size: 0.875rem;
     font-weight: 500;
     text-decoration: none;
@@ -161,8 +173,8 @@ body {
 }
 
 .btn-primary:hover {
-    background-color: #1d4ed8;
-    border-color: #1d4ed8;
+    background-color: #4338ca;
+    border-color: #4338ca;
 }
 
 .btn-secondary {
@@ -198,6 +210,17 @@ body {
     background-color: var(--light-color);
 }
 
+.btn:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+}
+
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 .btn-sm {
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
@@ -231,7 +254,7 @@ body {
 .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    box-shadow: var(--ring);
 }
 
 .form-select {
@@ -336,12 +359,13 @@ body {
 
 .modal-content {
     background: white;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     max-width: 500px;
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
+    border: 1px solid rgba(2, 6, 23, 0.08);
 }
 
 .modal-header {
@@ -350,6 +374,33 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.modal-close {
+    appearance: none;
+    border: 1px solid rgba(2, 6, 23, 0.10);
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.modal-close:hover {
+    transform: translateY(-1px);
+    background: rgba(79, 70, 229, 0.06);
+    color: var(--primary-color);
+    border-color: rgba(79, 70, 229, 0.20);
+}
+
+.modal-close:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
 }
 
 .modal-title {
