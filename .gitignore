@@ -1,3 +1,13 @@
+# Environments
+.env
+.env.local
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -28,8 +38,6 @@ share/python-wheels/
 MANIFEST
 
 # PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
 
@@ -56,10 +64,7 @@ coverage.xml
 *.pot
 
 # Django stuff:
-*.log
 local_settings.py
-db.sqlite3
-db.sqlite3-journal
 
 # Flask stuff:
 instance/
@@ -76,6 +81,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+.ipynb_checkpoints/
 
 # IPython
 profile_default/
@@ -89,15 +95,6 @@ celerybeat-schedule
 
 # SageMath parsed files
 *.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
 
 # Spyder project settings
 .spyderproject
@@ -123,14 +120,44 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# VS Code
+# IDE
 .vscode/
 .history/
 *.code-workspace
+.idea/
+*.swp
+*.swo
+*~
 
-# inncore_ai specific
-/hello-agents/
-/logs/
+# Logs
+logs/
+*.log
+
+# Database
 *.db
+*.sqlite
+*.sqlite3
+db.sqlite3
+db.sqlite3-journal
 *.db-journal
+
+# Data
+data/
+*.csv
+*.json
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Model files
+*.pth
+*.pt
+*.ckpt
+models/checkpoints/
+
+# Project specific
+/hello-agents/
+
+# Submission helper files (for reference only, not to be committed to hello-agents)
+PR.md
