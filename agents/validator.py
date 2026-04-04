@@ -174,9 +174,8 @@ class ValidatorAgent(BaseAgent):
         if url:
             bibtex += f"  url = {{{url}}},\n"
         
-        # 移除最后的逗号并关闭
+        # 格式化输出
         bibtex = bibtex.rstrip(",\n") + "\n}"
-        
         return bibtex
     
     async def _generate_apa_citation(self, paper_info: Dict) -> str:

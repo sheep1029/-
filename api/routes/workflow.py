@@ -141,6 +141,9 @@ async def complete_workflow(request: WorkflowRequest):
                     citations.append({
                         "paper_id": paper["id"],
                         "title": paper["title"],
+                        "authors": paper.get("authors", []),
+                        "year": paper.get("published_date", "")[:4] if paper.get("published_date") else "",
+                        "url": paper.get("url", ""),
                         "formatted_citation": citation_result.get("formatted_citation", "")
                     })
                 except Exception as e:

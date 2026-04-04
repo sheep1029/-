@@ -1907,15 +1907,35 @@
 
                         // 引用结果
                         if (step.result.citations) {
-                            html += `<p>生成 ${step.result.total_citations} 条引用</p>`;
-                            const citationId = 'citations-' + Date.now();
-                            html += `<button class="copy-btn" onclick="copyToClipboard('${citationId}', event)">📋 复制全部引用</button>`;
-                            html += `<div id="${citationId}" style="margin-top: 10px;">`;
-                            step.result.citations.forEach((citation, i) => {
-                                html += `<p style="margin: 5px 0;">${i + 1}. ${escapeHtml(citation.formatted_citation)}</p>`;
-                            });
-                            html += '</div>';
-                        }
+                        html += `<p>生成 ${step.result.total_citations} 条引用</p>`;
+                        const citationId = 'citations-' + Date.now();
+                        html += `<button class="copy-btn" onclick="copyToClipboard('${citationId}', event)">📋 复制全部引用(Raw)</button>`;
+                        html += `<div style="display:flex; flex-direction:column; gap:12px; margin-top:14px;">`;
+                        
+                        let rawCitationsText = "";
+                        step.result.citations.forEach((citation, i) => {
+                            rawCitationsText += `${i + 1}. ${citation.formatted_citation}\n\n`;
+                            
+                            // Render a nice card for the UI
+                            const authorsStr = Array.isArray(citation.authors) ? citation.authors.join(', ') : 'Unknown Authors';
+                            const yearStr = citation.year ? `(${citation.year})` : '';
+                            const urlStr = citation.url ? `<a href="${escapeHtml(citation.url)}" target="_blank" style="color:var(--primary);text-decoration:none;font-size:0.9rem;">[Source]</a>` : '';
+                            
+                            html += `
+                            <div style="background:rgba(255,255,255,0.6); border:1px solid rgba(2,6,23,0.1); border-radius:12px; padding:12px;">
+                                <div style="font-weight:700; color:var(--text); margin-bottom:6px; font-size:1.05rem;">
+                                    ${escapeHtml(citation.title)} ${urlStr}
+                                </div>
+                                <div style="color:var(--muted); font-size:0.9rem; margin-bottom:8px;">
+                                    ${escapeHtml(authorsStr)} ${escapeHtml(yearStr)}
+                                </div>
+                            </div>`;
+                        });
+                        
+                        // Hidden container for the "Copy All" button to grab
+                        html += `<div id="${citationId}" style="display:none;">${escapeHtml(rawCitationsText)}</div>`;
+                        html += `</div>`;
+                    }
 
                         // 报告结果
                         if (step.result.report) {
