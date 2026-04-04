@@ -1147,10 +1147,27 @@
             modeRadios.forEach(radio => {
                 radio.addEventListener('change', function () {
                     const workflowCard = document.getElementById('workflow-card');
+                    const individualCards = [
+                        document.getElementById('hunter-card'),
+                        document.getElementById('miner-card'),
+                        document.getElementById('coach-card'),
+                        document.getElementById('validator-card')
+                    ];
+                    
                     if (this.value === 'workflow') {
                         workflowCard.style.display = 'block';
+                        individualCards.forEach(card => {
+                            if (card) card.style.display = 'none';
+                        });
+                        // 自动激活工作流面板
+                        activateAgent('workflow');
                     } else {
                         workflowCard.style.display = 'none';
+                        individualCards.forEach(card => {
+                            if (card) card.style.display = 'block';
+                        });
+                        // 默认激活第一个单体智能体
+                        activateAgent('hunter');
                     }
                 });
             });
