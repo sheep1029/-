@@ -41,6 +41,7 @@ class WritingCoachRequest(BaseModel):
     text: str
     style: str = "formal"
     task: str = "polish"  # polish, translate, explain, expand
+    special_requirements: Optional[str] = None
     context: Optional[Dict[str, Any]] = {}
 
 class MimicRequest(BaseModel):
@@ -118,6 +119,17 @@ async def writing_coach(request: WritingCoachRequest):
         }
         
         prompt = prompts.get(request.task, prompts["polish"])
+        if request.special_requirements:
+            prompt = (
+                "用户特殊要求：\n"
+                f"{request.special_requirements}\n\n"
+                "说明：\n"
+                "- 请你自行判断这些要求中，哪些与你当前任务有关\n"
+                "- 只采纳与你当前任务相关的部分\n"
+                "- 与当前任务无关的要求可以忽略\n"
+                "- 如果特殊要求与当前任务冲突，请优先遵守系统目标和当前任务目标\n\n"
+                + prompt
+            )
         
         # 调用 LLM 处理
         response = await llm.ainvoke(prompt)

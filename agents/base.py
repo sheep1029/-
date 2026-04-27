@@ -88,11 +88,28 @@ class BaseAgent(ABC):
         try:
             # 构建完整的提示词
             full_prompt = prompt
+            special_requirements = None
             
-            # 添加上下文信息
             if context:
-                context_str = json.dumps(context, ensure_ascii=False, indent=2)
-                full_prompt = f"上下文信息:\n{context_str}\n\n任务:\n{prompt}"
+                special_requirements = context.get("special_requirements")
+                context_for_prompt = {k: v for k, v in context.items() if k != "special_requirements"}
+                if context_for_prompt:
+                    context_str = json.dumps(context_for_prompt, ensure_ascii=False, indent=2)
+                    full_prompt = f"上下文信息:\n{context_str}\n\n任务:\n{prompt}"
+            
+            if special_requirements:
+                special_requirements_text = str(special_requirements).strip()
+                if special_requirements_text:
+                    special_context = (
+                        "用户特殊要求：\n"
+                        f"{special_requirements_text}\n\n"
+                        "说明：\n"
+                        "- 请你自行判断这些要求中，哪些与你当前任务有关\n"
+                        "- 只采纳与你当前任务相关的部分\n"
+                        "- 与当前任务无关的要求可以忽略\n"
+                        "- 如果特殊要求与当前任务冲突，请优先遵守系统目标和当前任务目标\n\n"
+                    )
+                    full_prompt = special_context + full_prompt
             
             # 添加历史记录
             if self.history:

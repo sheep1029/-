@@ -20,6 +20,7 @@ class WorkflowRequest(BaseModel):
     analysis_type: str = "summary"  # summary, innovation, comparison, comprehensive
     citation_format: str = Field(default="bibtex", description="引用格式要求")
     writing_task: Optional[str] = Field(default=None, description="报告写作任务描述")
+    special_requirements: Optional[str] = Field(default=None, description="用户特殊要求")
     limit: int = Field(default=5, description="最大搜索结果数")
 
 class WorkflowStatus(BaseModel):
@@ -44,6 +45,7 @@ async def complete_workflow(request: WorkflowRequest):
             "max_results": request.limit,
             "citation_format": request.citation_format,
             "writing_task": request.writing_task,
+            "special_requirements": request.special_requirements,
             "papers": [],
             "analyses": [],
             "citations": [],

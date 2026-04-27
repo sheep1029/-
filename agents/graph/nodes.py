@@ -184,7 +184,8 @@ async def coach_node(state: WorkflowState) -> Dict[str, Any]:
         req = WritingCoachRequest(
             text=report_text,
             style="academic",
-            task=writing_task
+            task=writing_task,
+            special_requirements=state.get("special_requirements")
         )
         writing_result = await writing_coach(req)
         final_report = writing_result.get("result", "")

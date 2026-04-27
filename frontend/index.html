@@ -1041,6 +1041,10 @@
                         <option value="expand">内容扩写</option>
                     </select>
                 </div>
+                <div class="input-group">
+                    <label for="writing-special-requirements">特殊要求 (可选)</label>
+                    <textarea id="writing-special-requirements" placeholder="例如：使用更简洁的句式、侧重于算法描述、避免使用被动语态等..." style="min-height: 80px;"></textarea>
+                </div>
                 <button class="btn" onclick="executeCoachTask()">开始处理</button>
                 <div class="loading" id="coach-loading">
                     <div class="spinner"></div>
@@ -1111,7 +1115,10 @@
                         <option value="mla">MLA</option>
                     </select>
                 </div>
-
+                <div class="input-group">
+                    <label for="workflow-special-requirements">特殊要求 (可选)</label>
+                    <textarea id="workflow-special-requirements" placeholder="例如：在报告中侧重分析创新点、生成的引用需要包含DOI等..." style="min-height: 80px;"></textarea>
+                </div>
                 <div class="input-group">
                     <label class="toggle">
                         <input type="checkbox" id="workflow-generate-report" checked>
@@ -1291,6 +1298,7 @@
             const text = document.getElementById('writing-text').value;
             const style = document.getElementById('writing-style').value;
             const task = document.getElementById('writing-task').value;
+            const specialRequirements = document.getElementById('writing-special-requirements').value;
 
             if (!text.trim()) {
                 showError('coach-response', '请输入需要处理的文本');
@@ -1308,7 +1316,8 @@
                     body: JSON.stringify({
                         text: text,
                         style: style,
-                        task: task
+                        task: task,
+                        special_requirements: specialRequirements
                     })
                 });
 
@@ -1370,6 +1379,7 @@
             const limit = document.getElementById('workflow-limit').value;
             const analysisType = document.getElementById('workflow-analysis-type').value;
             const citationFormat = document.getElementById('workflow-citation-format').value;
+            const specialRequirements = document.getElementById('workflow-special-requirements').value;
             const generateReport = document.getElementById('workflow-generate-report').checked;
 
             if (!keywords.trim()) {
@@ -1390,6 +1400,7 @@
                         limit: parseInt(limit),
                         analysis_type: analysisType,
                         citation_format: citationFormat,
+                        special_requirements: specialRequirements,
                         writing_task: generateReport ? 'improve' : null
                     })
                 });
