@@ -19,7 +19,6 @@ async def hunter_node(state: WorkflowState) -> Dict[str, Any]:
         # 调用现有的搜索逻辑
         search_req = PaperSearchRequest(
             keywords=state["keywords"],
-            source=state.get("source", ["arxiv"]),
             limit=state["max_results"]
         )
         search_result = await search_papers(search_req)

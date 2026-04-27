@@ -13,67 +13,14 @@ from ..utils.pdf_parser import PDFParser
 from ..utils.embedding import EmbeddingService
 import json
 
-import arxiv
-import requests
-from bs4 import BeautifulSoup
-
 class PaperService:
     """论文服务类"""
-
-    def __init__(self, db: Optional[Session] = None):
+    
+    def __init__(self, db: Session):
         self.db = db
         self.vector_store = VectorStore()
         self.pdf_parser = PDFParser()
         self.embedding_service = EmbeddingService()
-
-    async def search_papers_from_source(self, source: str, keywords: List[str], limit: int = 10) -> List[Dict[str, Any]]:
-        """从指定来源搜索论文"""
-        if source == "arxiv":
-            return await self._search_arxiv(keywords, limit)
-        elif source == "semantic_scholar":
-            return await self._search_semantic_scholar(keywords, limit)
-        elif source == "pubmed":
-            return await self._search_pubmed(keywords, limit)
-        else:
-            raise ValueError(f"不支持的搜索来源: {source}")
-
-    async def _search_arxiv(self, keywords: List[str], limit: int) -> List[Dict[str, Any]]:
-        papers = []
-        query = " OR ".join([f'all:"{keyword}"' for keyword in keywords])
-        search = arxiv.Search(
-            query=query,
-            max_results=limit,
-            sort_by=arxiv.SortCriterion.SubmittedDate,
-            sort_order=arxiv.SortOrder.Descending,
-        )
-
-        for result in search.results():
-            paper = {
-                "id": result.entry_id.split('/')[-1],
-                "title": result.title,
-                "authors": [author.name for author in result.authors],
-                "abstract": result.summary.replace('\n', ' ').strip(),
-                "url": result.entry_id,
-                "published_date": result.published.strftime("%Y-%m-%d"),
-                "pdf_url": result.pdf_url,
-                "categories": result.categories,
-                "primary_category": result.primary_category,
-                "source": "arxiv"
-            }
-            papers.append(paper)
-        return papers
-
-    async def _search_semantic_scholar(self, keywords: List[str], limit: int) -> List[Dict[str, Any]]:
-        # 语义学者搜索的实现 (占位符)
-        # 实际项目中需要使用 Semantic Scholar API 或爬虫
-        print(f"Searching Semantic Scholar for {keywords}")
-        return []
-
-    async def _search_pubmed(self, keywords: List[str], limit: int) -> List[Dict[str, Any]]:
-        # PubMed 搜索的实现 (占位符)
-        # 实际项目中需要使用 Entrez API 或爬虫
-        print(f"Searching PubMed for {keywords}")
-        return []
     
     def get_paper_by_id(self, paper_id: int) -> Optional[Paper]:
         """根据ID获取论文"""

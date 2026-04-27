@@ -8,7 +8,7 @@ from typing import Dict, Any, List
 
 import arxiv
 from fastapi import APIRouter, HTTPException, UploadFile, File
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from core.llm_adapter import get_llm_adapter
 
@@ -18,7 +18,7 @@ router = APIRouter()
 
 class PaperSearchRequest(BaseModel):
     keywords: str
-    source: List[str] = Field(default=["arxiv"], description="搜索来源 (支持多选)")
+    source: str = "arxiv"
     limit: int = 10
 
 
@@ -93,35 +93,37 @@ async def _translate_keywords_if_needed(keywords: str) -> List[str]:
 
 @router.post("/search", response_model=Dict[str, Any])
 async def search_papers(request: PaperSearchRequest):
-    """搜索论文 - 使用真实的 ArXiv API 或其他来源"""
+    """搜索论文 - 使用真实的 ArXiv API"""
     try:
-        all_papers = []
+        papers = []
         search_keywords = await _translate_keywords_if_needed(request.keywords)
 
-        from services.paper_service import PaperService
-        paper_service = PaperService()
+        if request.source == "arxiv" or request.source == "all":
+            logger.info(f"正在搜索 ArXiv: 原始关键词={request.keywords}, 检索关键词={search_keywords}")
 
-        for source_name in request.source:
-            logger.info(f"正在从 {source_name} 搜索: 原始关键词={request.keywords}, 检索关键词={search_keywords}")
-            try:
-                source_papers = await paper_service.search_papers_from_source(
-                    source=source_name,
-                    keywords=search_keywords,
-                    limit=request.limit
-                )
-                all_papers.extend(source_papers)
-            except Exception as e:
-                logger.warning(f"从 {source_name} 搜索失败: {str(e)}")
-                # 可以选择在这里继续，或者根据需求中断
-        
-        # 对所有来源的结果进行去重和合并
-        unique_papers = {}
-        for paper in all_papers:
-            if paper['id'] not in unique_papers:
-                unique_papers[paper['id']] = paper
-        papers = list(unique_papers.values())
+            query = " OR ".join([f'all:"{keyword}"' for keyword in search_keywords])
+            search = arxiv.Search(
+                query=query,
+                max_results=request.limit,
+                sort_by=arxiv.SortCriterion.SubmittedDate,
+                sort_order=arxiv.SortOrder.Descending,
+            )
 
-        logger.info(f"总共找到 {len(papers)} 篇论文")
+            for result in search.results():
+                paper = {
+                    "id": result.entry_id.split('/')[-1],
+                    "title": result.title,
+                    "authors": [author.name for author in result.authors],
+                    "abstract": result.summary.replace('\n', ' ').strip(),
+                    "url": result.entry_id,
+                    "published_date": result.published.strftime("%Y-%m-%d"),
+                    "pdf_url": result.pdf_url,
+                    "categories": result.categories,
+                    "primary_category": result.primary_category,
+                }
+                papers.append(paper)
+
+            logger.info(f"找到 {len(papers)} 篇论文")
 
         if not papers:
             return {

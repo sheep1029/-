@@ -416,6 +416,16 @@
             resize: vertical;
         }
 
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .checkbox-group input {
+            margin-right: 5px;
+        }
+
         .file-upload {
             border: 1px dashed rgba(79, 70, 229, 0.55);
             border-radius: 14px;
@@ -1107,22 +1117,25 @@
                 </div>
 
                 <div class="input-group">
-                    <label>搜索来源</label>
-                    <div id="workflow-search-source-checkboxes" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px;">
-                        <label><input type="checkbox" name="workflow-search-source" value="arxiv" checked> arXiv</label>
-                        <label><input type="checkbox" name="workflow-search-source" value="semantic_scholar"> Semantic Scholar</label>
-                        <label><input type="checkbox" name="workflow-search-source" value="pubmed"> PubMed</label>
+                        <label>搜索来源 (可多选)</label>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="source-arxiv" name="workflow-source" value="arxiv" checked>
+                            <label for="source-arxiv">arXiv</label>
+                            <input type="checkbox" id="source-semantic" name="workflow-source" value="semantic_scholar">
+                            <label for="source-semantic">Semantic Scholar</label>
+                            <input type="checkbox" id="source-pubmed" name="workflow-source" value="pubmed">
+                            <label for="source-pubmed">PubMed</label>
+                        </div>
                     </div>
-                </div>
-            <div class="input-group">
-                <label for="workflow-citation-format">引用格式</label>
-                    <select id="workflow-citation-format">
-                        <option value="bibtex">BibTeX</option>
-                        <option value="apa">APA</option>
-                        <option value="ieee">IEEE</option>
-                        <option value="mla">MLA</option>
-                    </select>
-                </div>
+                    <div class="input-group">
+                        <label for="workflow-citation-format">引用格式</label>
+                        <select id="workflow-citation-format">
+                            <option value="bibtex">BibTeX</option>
+                            <option value="apa">APA</option>
+                            <option value="ieee">IEEE</option>
+                            <option value="mla">MLA</option>
+                        </select>
+                    </div>
                 <div class="input-group">
                     <label for="workflow-special-requirements">特殊要求 (可选)</label>
                     <textarea id="workflow-special-requirements" placeholder="例如：在报告中侧重分析创新点、生成的引用需要包含DOI等..." style="min-height: 80px;"></textarea>
@@ -1382,9 +1395,8 @@
             const analysisType = document.getElementById('workflow-analysis-type').value;
             const citationFormat = document.getElementById('workflow-citation-format').value;
             const specialRequirements = document.getElementById('workflow-special-requirements').value;
-
-            const searchSourceCheckboxes = document.querySelectorAll('input[name="workflow-search-source"]:checked');
-            const selectedSources = Array.from(searchSourceCheckboxes).map(checkbox => checkbox.value);
+            const selectedSources = Array.from(document.querySelectorAll('input[name="workflow-source"]:checked'))
+                                     .map(cb => cb.value);
 
             if (!keywords.trim()) {
                 showError('workflow-response', '请输入研究关键词');
@@ -1392,7 +1404,7 @@
             }
 
             if (selectedSources.length === 0) {
-                showError('workflow-response', '请至少选择一个搜索来源');
+                showError('workflow-response', '请至少选择一个搜索来源！');
                 return;
             }
 
@@ -1406,11 +1418,11 @@
                     },
                     body: JSON.stringify({
                         keywords: keywords,
-                        source: selectedSources, // 添加多选搜索来源
                         limit: parseInt(limit),
                         analysis_type: analysisType,
                         citation_format: citationFormat,
                         special_requirements: specialRequirements,
+                        search_sources: selectedSources, // 新增
                         writing_task: 'improve' // 协同模式默认生成综合报告
                     })
                 });
