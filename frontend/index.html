@@ -1119,12 +1119,6 @@
                     <label for="workflow-special-requirements">特殊要求 (可选)</label>
                     <textarea id="workflow-special-requirements" placeholder="例如：在报告中侧重分析创新点、生成的引用需要包含DOI等..." style="min-height: 80px;"></textarea>
                 </div>
-                <div class="input-group">
-                    <label class="toggle">
-                        <input type="checkbox" id="workflow-generate-report" checked>
-                        生成综合报告
-                    </label>
-                </div>
 
                 <button class="btn btn-workflow" onclick="executeWorkflow()">启动协同工作流</button>
 
@@ -1380,7 +1374,6 @@
             const analysisType = document.getElementById('workflow-analysis-type').value;
             const citationFormat = document.getElementById('workflow-citation-format').value;
             const specialRequirements = document.getElementById('workflow-special-requirements').value;
-            const generateReport = document.getElementById('workflow-generate-report').checked;
 
             if (!keywords.trim()) {
                 showError('workflow-response', '请输入研究关键词');
@@ -1401,7 +1394,7 @@
                         analysis_type: analysisType,
                         citation_format: citationFormat,
                         special_requirements: specialRequirements,
-                        writing_task: generateReport ? 'improve' : null
+                        writing_task: 'improve' // 协同模式默认生成综合报告
                     })
                 });
 
