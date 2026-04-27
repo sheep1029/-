@@ -1107,7 +1107,15 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="workflow-citation-format">引用格式</label>
+                    <label>搜索来源</label>
+                    <div id="workflow-search-source-checkboxes" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px;">
+                        <label><input type="checkbox" name="workflow-search-source" value="arxiv" checked> arXiv</label>
+                        <label><input type="checkbox" name="workflow-search-source" value="semantic_scholar"> Semantic Scholar</label>
+                        <label><input type="checkbox" name="workflow-search-source" value="pubmed"> PubMed</label>
+                    </div>
+                </div>
+            <div class="input-group">
+                <label for="workflow-citation-format">引用格式</label>
                     <select id="workflow-citation-format">
                         <option value="bibtex">BibTeX</option>
                         <option value="apa">APA</option>
@@ -1375,8 +1383,16 @@
             const citationFormat = document.getElementById('workflow-citation-format').value;
             const specialRequirements = document.getElementById('workflow-special-requirements').value;
 
+            const searchSourceCheckboxes = document.querySelectorAll('input[name="workflow-search-source"]:checked');
+            const selectedSources = Array.from(searchSourceCheckboxes).map(checkbox => checkbox.value);
+
             if (!keywords.trim()) {
                 showError('workflow-response', '请输入研究关键词');
+                return;
+            }
+
+            if (selectedSources.length === 0) {
+                showError('workflow-response', '请至少选择一个搜索来源');
                 return;
             }
 
@@ -1390,6 +1406,7 @@
                     },
                     body: JSON.stringify({
                         keywords: keywords,
+                        source: selectedSources, // 添加多选搜索来源
                         limit: parseInt(limit),
                         analysis_type: analysisType,
                         citation_format: citationFormat,

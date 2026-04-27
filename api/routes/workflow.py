@@ -17,6 +17,7 @@ router = APIRouter()
 # Pydantic模型
 class WorkflowRequest(BaseModel):
     keywords: str = Field(..., description="研究关键词")
+    source: List[str] = Field(default=["arxiv"], description="搜索来源 (支持多选)")
     analysis_type: str = "summary"  # summary, innovation, comparison, comprehensive
     citation_format: str = Field(default="bibtex", description="引用格式要求")
     writing_task: Optional[str] = Field(default=None, description="报告写作任务描述")
@@ -42,6 +43,7 @@ async def complete_workflow(request: WorkflowRequest):
         # 1. 构造初始状态
         initial_state = {
             "keywords": request.keywords,
+            "source": request.source,  # 添加搜索来源
             "max_results": request.limit,
             "citation_format": request.citation_format,
             "writing_task": request.writing_task,
