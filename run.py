@@ -4,7 +4,6 @@ InnoCore AI - Simple Run Script
 研创·智研 - 简单运行脚本
 """
 
-import os
 import sys
 import uvicorn
 from pathlib import Path

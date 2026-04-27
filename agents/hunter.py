@@ -11,7 +11,6 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import hashlib
 import os
-from urllib.parse import urljoin, quote
 
 from agents.base import BaseAgent
 from core.database import db_manager
@@ -90,6 +89,95 @@ class HunterAgent(BaseAgent):
     def get_required_fields(self) -> List[str]:
         """获取必需的输入字段"""
         return ["keywords"]
+    
+    def _normalize_keywords_input(self, keywords: Any) -> List[str]:
+        """规范化用户输入的关键词"""
+        if isinstance(keywords, str):
+            items = re.split(r"[，,;；\n]\s*", keywords)
+        elif isinstance(keywords, list):
+            items = keywords
+        else:
+            items = [str(keywords)]
+
+        normalized = []
+        for item in items:
+            text = str(item).strip()
+            if text:
+                normalized.append(text)
+
+        return self._deduplicate_texts(normalized)
+
+    def _contains_chinese(self, text: str) -> bool:
+        """判断字符串是否包含中文"""
+        return bool(re.search(r"[\u4e00-\u9fff]", text))
+
+    def _deduplicate_texts(self, texts: List[str]) -> List[str]:
+        """去除重复文本，同时保留顺序"""
+        seen = set()
+        result = []
+        for text in texts:
+            key = text.lower().strip()
+            if key and key not in seen:
+                seen.add(key)
+                result.append(text)
+        return result
+
+    def _parse_translation_output(self, text: str) -> List[str]:
+        """解析LLM翻译输出"""
+        text = text.strip()
+        if not text:
+            return []
+
+        if text.startswith("[") and text.endswith("]"):
+            try:
+                import json
+                parsed = json.loads(text)
+                if isinstance(parsed, list):
+                    return self._deduplicate_texts([str(x).strip() for x in parsed if str(x).strip()])
+            except Exception:
+                pass
+
+        candidates = re.split(r"[\n,，;；|/]", text)
+        cleaned = []
+        for candidate in candidates:
+            item = candidate.strip().strip("-•*`\"'")
+            if item:
+                cleaned.append(item)
+        return self._deduplicate_texts(cleaned)
+
+    async def _translate_keywords_if_needed(self, keywords: List[str]) -> List[str]:
+        """将中文关键词翻译为英文关键词"""
+        translated_keywords: List[str] = []
+        for keyword in keywords:
+            if self._contains_chinese(keyword):
+                try:
+                    prompt = (
+                        "请将下面的科研检索关键词翻译成适合英文论文数据库检索的英文关键词。"
+                        "只输出英文关键词本身，不要解释，不要编号，不要加多余文本。"
+                        "如果是短语，请保留其学术含义。可以给出多个英文同义词，用换行或逗号分隔。\n\n"
+                        f"关键词: {keyword}"
+                    )
+                    response = await self.think(prompt)
+                    translated = self._parse_translation_output(response)
+                    if translated:
+                        translated_keywords.extend(translated)
+                    else:
+                        translated_keywords.append(keyword)
+                except Exception as e:
+                    self._add_to_history(f"关键词翻译失败，回退原词: {keyword}，原因: {str(e)}")
+                    translated_keywords.append(keyword)
+            else:
+                translated_keywords.append(keyword)
+
+        return self._deduplicate_texts(translated_keywords)
+
+    def _build_search_keywords(self, original_keywords: List[str], translated_keywords: List[str]) -> List[str]:
+        """构建最终检索关键词，优先英文，同时保留原始词的英文内容"""
+        combined = translated_keywords[:]
+        for keyword in original_keywords:
+            if not self._contains_chinese(keyword):
+                combined.append(keyword)
+        return self._deduplicate_texts(combined)
     
     async def _search_papers_from_arxiv(self, keywords: List[str], max_papers: int, days_back: int) -> List[Dict]:
         """从ArXiv搜索论文"""
