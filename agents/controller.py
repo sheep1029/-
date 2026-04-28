@@ -234,7 +234,7 @@ class AgentController:
             hunting_input = {
                 "keywords": keywords,
                 "max_papers": input_data.get("max_papers", 10),
-                "sources": input_data.get("sources", ["arxiv"])
+                "sources": ["arxiv"]
             }
             
             hunting_result = await self.agents["hunter"].run(hunting_input)

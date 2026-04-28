@@ -106,7 +106,10 @@ async def search_papers(request: PaperSearchRequest):
         selected_sources = request.sources or [request.source]
         normalized_limit = _normalize_limit(request.limit)
         
-        if "arxiv" in selected_sources or "all" in selected_sources:
+        if selected_sources and any(source not in {"arxiv", "all"} for source in selected_sources):
+            logger.info(f"当前仅支持 ArXiv 检索，已忽略前端选择的来源: {selected_sources}")
+        
+        if "arxiv" in selected_sources or "all" in selected_sources or not selected_sources:
             logger.info(f"正在搜索 ArXiv: 原始关键词={request.keywords}, 检索关键词={search_keywords}")
             
             query = " OR ".join([f'all:"{keyword}"' for keyword in search_keywords])

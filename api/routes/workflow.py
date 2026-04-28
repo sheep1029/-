@@ -98,7 +98,7 @@ async def search_and_analyze(request: WorkflowRequest):
 
         search_result = await search_papers(PaperSearchRequest(
             keywords=request.keywords,
-            sources=request.sources,
+            sources=["arxiv"],
             limit=request.limit
         ))
 
