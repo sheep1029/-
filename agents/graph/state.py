@@ -12,6 +12,7 @@ class WorkflowState(TypedDict):
     citation_format: str
     writing_task: Optional[str]
     special_requirements: Optional[str]
+    sources: List[str]
     
     # 过程数据与输出
     papers: List[Dict[str, Any]]

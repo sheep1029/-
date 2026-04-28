@@ -95,7 +95,7 @@ class BaseAgent(ABC):
                 context_for_prompt = {k: v for k, v in context.items() if k != "special_requirements"}
                 if context_for_prompt:
                     context_str = json.dumps(context_for_prompt, ensure_ascii=False, indent=2)
-                    full_prompt = f"上下文信息:\n{context_str}\n\n任务:\n{prompt}"
+                full_prompt = f"上下文信息:\n{context_str}\n\n任务:\n{prompt}"
             
             if special_requirements:
                 special_requirements_text = str(special_requirements).strip()

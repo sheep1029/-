@@ -4,11 +4,12 @@
 
 import logging
 import re
+import asyncio
 from typing import Dict, Any, List
 
 import arxiv
 from fastapi import APIRouter, HTTPException, UploadFile, File
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from core.llm_adapter import get_llm_adapter
 
@@ -19,6 +20,7 @@ router = APIRouter()
 class PaperSearchRequest(BaseModel):
     keywords: str
     source: str = "arxiv"
+    sources: List[str] = Field(default_factory=list)
     limit: int = 10
 
 
@@ -65,6 +67,10 @@ def _parse_translation_output(text: str) -> List[str]:
     return _deduplicate_texts(cleaned)
 
 
+def _normalize_limit(limit: int) -> int:
+    return max(1, min(limit, 20))
+
+
 async def _translate_keywords_if_needed(keywords: str) -> List[str]:
     normalized = _normalize_keywords(keywords)
     translated_keywords: List[str] = []
@@ -97,34 +103,51 @@ async def search_papers(request: PaperSearchRequest):
     try:
         papers = []
         search_keywords = await _translate_keywords_if_needed(request.keywords)
-
-        if request.source == "arxiv" or request.source == "all":
+        selected_sources = request.sources or [request.source]
+        normalized_limit = _normalize_limit(request.limit)
+        
+        if "arxiv" in selected_sources or "all" in selected_sources:
             logger.info(f"正在搜索 ArXiv: 原始关键词={request.keywords}, 检索关键词={search_keywords}")
-
+            
             query = " OR ".join([f'all:"{keyword}"' for keyword in search_keywords])
             search = arxiv.Search(
                 query=query,
-                max_results=request.limit,
+                max_results=normalized_limit,
                 sort_by=arxiv.SortCriterion.SubmittedDate,
                 sort_order=arxiv.SortOrder.Descending,
             )
-
-            for result in search.results():
-                paper = {
-                    "id": result.entry_id.split('/')[-1],
-                    "title": result.title,
-                    "authors": [author.name for author in result.authors],
-                    "abstract": result.summary.replace('\n', ' ').strip(),
-                    "url": result.entry_id,
-                    "published_date": result.published.strftime("%Y-%m-%d"),
-                    "pdf_url": result.pdf_url,
-                    "categories": result.categories,
-                    "primary_category": result.primary_category,
-                }
-                papers.append(paper)
-
+            
+            retries = 3
+            backoff_seconds = 1
+            for attempt in range(retries):
+                try:
+                    client = arxiv.Client(page_size=normalized_limit, delay_seconds=3, num_retries=2)
+                    results = list(client.results(search))
+                    for result in results[:normalized_limit]:
+                        paper = {
+                            "id": result.entry_id.split('/')[-1],
+                            "title": result.title,
+                            "authors": [author.name for author in result.authors],
+                            "abstract": result.summary.replace('\n', ' ').strip(),
+                            "url": result.entry_id,
+                            "published_date": result.published.strftime("%Y-%m-%d"),
+                            "pdf_url": result.pdf_url,
+                            "categories": result.categories,
+                            "primary_category": result.primary_category,
+                        }
+                        papers.append(paper)
+                    break
+                except Exception as search_error:
+                    error_text = str(search_error)
+                    if "429" in error_text and attempt < retries - 1:
+                        wait_seconds = backoff_seconds * (2 ** attempt)
+                        logger.warning(f"ArXiv 触发限流，等待 {wait_seconds}s 后重试: {error_text}")
+                        await asyncio.sleep(wait_seconds)
+                        continue
+                    raise
+            
             logger.info(f"找到 {len(papers)} 篇论文")
-
+        
         if not papers:
             return {
                 "success": True,
@@ -135,7 +158,7 @@ async def search_papers(request: PaperSearchRequest):
                 "source": request.source,
                 "message": "未找到相关论文，请尝试其他关键词",
             }
-
+        
         return {
             "success": True,
             "papers": papers,
@@ -144,7 +167,7 @@ async def search_papers(request: PaperSearchRequest):
             "translated_keywords": search_keywords,
             "source": request.source,
         }
-
+        
     except Exception as e:
         logger.error(f"论文搜索失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"搜索失败: {str(e)}")
@@ -156,9 +179,9 @@ async def upload_paper(file: UploadFile = File(...)):
     try:
         if not file.filename.endswith('.pdf'):
             raise HTTPException(status_code=400, detail="只支持PDF文件")
-
+        
         file_url = f"/uploads/{file.filename}"
-
+        
         return {
             "success": True,
             "file_url": file_url,
@@ -166,7 +189,7 @@ async def upload_paper(file: UploadFile = File(...)):
             "size": getattr(file, 'size', 0),
             "message": "文件上传成功",
         }
-
+        
     except Exception as e:
         logger.error(f"文件上传失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"上传失败: {str(e)}")

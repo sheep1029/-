@@ -22,6 +22,7 @@ class WorkflowRequest(BaseModel):
     writing_task: Optional[str] = Field(default=None, description="报告写作任务描述")
     special_requirements: Optional[str] = Field(default=None, description="用户特殊要求")
     limit: int = Field(default=5, description="最大搜索结果数")
+    sources: List[str] = Field(default_factory=lambda: ["arxiv", "ieee"], description="数据来源，可多选")
 
 class WorkflowStatus(BaseModel):
     workflow_id: str
@@ -46,6 +47,7 @@ async def complete_workflow(request: WorkflowRequest):
             "citation_format": request.citation_format,
             "writing_task": request.writing_task,
             "special_requirements": request.special_requirements,
+            "sources": request.sources,
             "papers": [],
             "analyses": [],
             "citations": [],
@@ -96,7 +98,7 @@ async def search_and_analyze(request: WorkflowRequest):
 
         search_result = await search_papers(PaperSearchRequest(
             keywords=request.keywords,
-            source="arxiv",
+            sources=request.sources,
             limit=request.limit
         ))
 

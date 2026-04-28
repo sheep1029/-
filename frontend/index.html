@@ -416,16 +416,6 @@
             resize: vertical;
         }
 
-        .checkbox-group {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .checkbox-group input {
-            margin-right: 5px;
-        }
-
         .file-upload {
             border: 1px dashed rgba(79, 70, 229, 0.55);
             border-radius: 14px;
@@ -1107,6 +1097,24 @@
                 </div>
 
                 <div class="input-group">
+                    <label>数据来源（可多选）</label>
+                    <div class="multi-select-group" id="workflow-sources-group">
+                        <label class="multi-select-option">
+                            <input type="checkbox" name="workflow-source" value="arxiv" checked>
+                            <span>ArXiv</span>
+                        </label>
+                        <label class="multi-select-option">
+                            <input type="checkbox" name="workflow-source" value="ieee" checked>
+                            <span>IEEE</span>
+                        </label>
+                        <label class="multi-select-option">
+                            <input type="checkbox" name="workflow-source" value="pubmed">
+                            <span>PubMed</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="input-group">
                     <label for="workflow-analysis-type">分析类型</label>
                     <select id="workflow-analysis-type">
                         <option value="summary">摘要分析</option>
@@ -1117,25 +1125,14 @@
                 </div>
 
                 <div class="input-group">
-                        <label>搜索来源 (可多选)</label>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="source-arxiv" name="workflow-source" value="arxiv" checked>
-                            <label for="source-arxiv">arXiv</label>
-                            <input type="checkbox" id="source-semantic" name="workflow-source" value="semantic_scholar">
-                            <label for="source-semantic">Semantic Scholar</label>
-                            <input type="checkbox" id="source-pubmed" name="workflow-source" value="pubmed">
-                            <label for="source-pubmed">PubMed</label>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="workflow-citation-format">引用格式</label>
-                        <select id="workflow-citation-format">
-                            <option value="bibtex">BibTeX</option>
-                            <option value="apa">APA</option>
-                            <option value="ieee">IEEE</option>
-                            <option value="mla">MLA</option>
-                        </select>
-                    </div>
+                    <label for="workflow-citation-format">引用格式</label>
+                    <select id="workflow-citation-format">
+                        <option value="bibtex">BibTeX</option>
+                        <option value="apa">APA</option>
+                        <option value="ieee">IEEE</option>
+                        <option value="mla">MLA</option>
+                    </select>
+                </div>
                 <div class="input-group">
                     <label for="workflow-special-requirements">特殊要求 (可选)</label>
                     <textarea id="workflow-special-requirements" placeholder="例如：在报告中侧重分析创新点、生成的引用需要包含DOI等..." style="min-height: 80px;"></textarea>
@@ -1393,18 +1390,17 @@
             const keywords = document.getElementById('workflow-keywords').value;
             const limit = document.getElementById('workflow-limit').value;
             const analysisType = document.getElementById('workflow-analysis-type').value;
+            const sources = Array.from(document.querySelectorAll('input[name="workflow-source"]:checked')).map(input => input.value);
             const citationFormat = document.getElementById('workflow-citation-format').value;
             const specialRequirements = document.getElementById('workflow-special-requirements').value;
-            const selectedSources = Array.from(document.querySelectorAll('input[name="workflow-source"]:checked'))
-                                     .map(cb => cb.value);
 
             if (!keywords.trim()) {
                 showError('workflow-response', '请输入研究关键词');
                 return;
             }
 
-            if (selectedSources.length === 0) {
-                showError('workflow-response', '请至少选择一个搜索来源！');
+            if (!sources.length) {
+                showError('workflow-response', '请至少选择一个数据来源');
                 return;
             }
 
@@ -1422,7 +1418,7 @@
                         analysis_type: analysisType,
                         citation_format: citationFormat,
                         special_requirements: specialRequirements,
-                        search_sources: selectedSources, // 新增
+                        sources: sources,
                         writing_task: 'improve' // 协同模式默认生成综合报告
                     })
                 });
