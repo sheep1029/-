@@ -198,8 +198,21 @@ async def knowledge_graph_node(state: WorkflowState) -> Dict[str, Any]:
         "common_metrics": sorted(detected_metrics),
         "observed_limitations": sorted(detected_limitations),
     }
-    step_record = {"step": 3, "name": "KnowledgeGraph - 知识图谱构建", "status": "completed", "result": {"total_nodes": len(nodes), "total_edges": len(edges), "summary": summary}}
-    return {"knowledge_graph": {"nodes": nodes, "edges": edges, "summary": summary}, "steps_history": [step_record]}
+    knowledge_graph = {"nodes": nodes, "edges": edges, "summary": summary}
+    step_record = {
+        "step": 3,
+        "name": "KnowledgeGraph - 知识图谱构建",
+        "status": "completed",
+        "result": {
+            "total_nodes": len(nodes),
+            "total_edges": len(edges),
+            "summary": summary,
+            "nodes": nodes,
+            "edges": edges,
+            "knowledge_graph": knowledge_graph,
+        },
+    }
+    return {"knowledge_graph": knowledge_graph, "steps_history": [step_record]}
 
 
 async def validator_node(state: WorkflowState) -> Dict[str, Any]:

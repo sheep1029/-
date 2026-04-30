@@ -1888,6 +1888,88 @@
             return html;
         }
 
+        function renderKnowledgeGraphSvg(kg) {
+            const nodes = Array.isArray(kg?.nodes) ? kg.nodes : [];
+            const edges = Array.isArray(kg?.edges) ? kg.edges : [];
+            if (!nodes.length) {
+                return '<div class="empty-state">暂无知识图谱节点</div>';
+            }
+
+            const orderedTypes = ['Topic', 'Paper', 'Method', 'Task', 'Dataset', 'Metric', 'Limitation'];
+            const width = 1400;
+            const height = 900;
+            const centerX = 700;
+            const centerY = 450;
+            const layout = new Map();
+            const grouped = new Map();
+            nodes.forEach(node => {
+                const type = node.type || 'Unknown';
+                if (!grouped.has(type)) grouped.set(type, []);
+                grouped.get(type).push(node);
+            });
+
+            const ringConfig = {
+                Topic: { radius: 0 },
+                Paper: { radius: 220 },
+                Method: { radius: 360 },
+                Task: { radius: 360 },
+                Dataset: { radius: 500 },
+                Metric: { radius: 500 },
+                Limitation: { radius: 620 }
+            };
+
+            orderedTypes.forEach(type => {
+                const group = grouped.get(type) || [];
+                if (!group.length) return;
+                const radius = ringConfig[type]?.radius ?? 620;
+                const count = group.length;
+                group.forEach((node, i) => {
+                    const angle = count === 1 ? -Math.PI / 2 : (-Math.PI / 2) + ((2 * Math.PI) * i / count);
+                    layout.set(node.id, { x: centerX + radius * Math.cos(angle), y: centerY + radius * Math.sin(angle) });
+                });
+            });
+
+            nodes.forEach((node, idx) => {
+                if (layout.has(node.id)) return;
+                const angle = (2 * Math.PI * idx) / Math.max(nodes.length, 1);
+                layout.set(node.id, { x: centerX + 620 * Math.cos(angle), y: centerY + 620 * Math.sin(angle) });
+            });
+
+            const colorByType = {
+                Topic: '#4f46e5',
+                Paper: '#0ea5e9',
+                Method: '#8b5cf6',
+                Task: '#10b981',
+                Dataset: '#f59e0b',
+                Metric: '#ef4444',
+                Limitation: '#64748b'
+            };
+            const safeText = (value) => escapeHtml(String(value ?? ''));
+            const urlSafe = (value) => String(value ?? '').replace(/"/g, '&quot;');
+
+            let svg = `<div class="kg-graph-wrap"><svg viewBox="0 0 ${width} ${height}" class="kg-graph-svg" role="img" aria-label="知识图谱可视化"><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"></path></marker></defs><rect x="0" y="0" width="${width}" height="${height}" rx="24" fill="#f8fafc"></rect>`;
+
+            edges.forEach(edge => {
+                const source = layout.get(edge.source);
+                const target = layout.get(edge.target);
+                if (!source || !target) return;
+                svg += `<line x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" stroke="rgba(148,163,184,0.72)" stroke-width="2" marker-end="url(#arrow)"></line>`;
+            });
+
+            nodes.forEach(node => {
+                const pos = layout.get(node.id);
+                if (!pos) return;
+                const fill = colorByType[node.type] || '#334155';
+                const radius = node.type === 'Topic' ? 42 : node.type === 'Paper' ? 30 : 24;
+                const label = (node.label || '').slice(0, 20);
+                const props = urlSafe(JSON.stringify(node.properties || {}));
+                svg += `<g transform="translate(${pos.x}, ${pos.y})" class="kg-node" data-label="${urlSafe(label)}" data-type="${urlSafe(node.type || 'Unknown')}" data-props="${props}"><circle r="${radius + 10}" fill="${fill}" opacity="0.16"></circle><circle r="${radius}" fill="${fill}" stroke="#ffffff" stroke-width="3"></circle><text text-anchor="middle" dy="-0.22em" fill="#fff" font-size="12" font-weight="900">${safeText(node.type)}</text><text text-anchor="middle" dy="1.45em" fill="#0f172a" font-size="11" font-weight="900">${safeText(label)}</text></g>`;
+            });
+
+            svg += `</svg></div>`;
+            return svg;
+        }
+
         // 格式化工作流结果
         function formatWorkflowResult(data) {
             let html = `
@@ -1912,6 +1994,29 @@
                 `;
             }
 
+            if (data.knowledge_graph) {
+                const kg = data.knowledge_graph;
+                const summary = kg.summary || {};
+                html += `
+                    <div class="paper-card">
+                        <h4>🕸️ 知识图谱可视化</h4>
+                        <div class="meta">
+                            <span>🔷 节点 ${kg.nodes ? kg.nodes.length : 0}</span>
+                            <span>➡️ 关系 ${kg.edges ? kg.edges.length : 0}</span>
+                        </div>
+                        <div class="kg-summary-grid">
+                            <div><strong>主题</strong><p>${escapeHtml(summary.topic || '')}</p></div>
+                            <div><strong>任务</strong><p>${escapeHtml((summary.main_tasks || []).join('、') || '无')}</p></div>
+                            <div><strong>方法</strong><p>${escapeHtml((summary.main_methods || []).join('、') || '无')}</p></div>
+                            <div><strong>数据集</strong><p>${escapeHtml((summary.main_datasets || []).join('、') || '无')}</p></div>
+                            <div><strong>指标</strong><p>${escapeHtml((summary.common_metrics || []).join('、') || '无')}</p></div>
+                            <div><strong>局限</strong><p>${escapeHtml((summary.observed_limitations || []).join('、') || '无')}</p></div>
+                        </div>
+                        ${renderKnowledgeGraphSvg(kg)}
+                    </div>
+                `;
+            }
+
             // 显示各步骤结果
             if (data.steps && data.steps.length > 0) {
                 data.steps.forEach((step, index) => {
@@ -1923,92 +2028,49 @@
                     `;
 
                     if (step.status === 'completed' && step.result) {
-                        // 论文搜索结果
                         if (step.result.papers) {
                             html += `<p>找到 ${step.result.total_found} 篇论文</p>`;
                             step.result.papers.slice(0, 3).forEach((paper, i) => {
-                                html += `
-                                    <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">
-                                        <strong>${i + 1}. ${escapeHtml(paper.title)}</strong><br>
-                                        <small>作者: ${paper.authors.slice(0, 3).join(', ')}${paper.authors.length > 3 ? ' et al.' : ''}</small>
-                                    </div>
-                                `;
+                                html += `<div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;"><strong>${i + 1}. ${escapeHtml(paper.title)}</strong><br><small>作者: ${(paper.authors || []).slice(0, 3).join(', ')}${(paper.authors || []).length > 3 ? ' et al.' : ''}</small></div>`;
                             });
                         }
 
-                        // 分析结果
                         if (step.result.analyses) {
                             html += `<p>完成 ${step.result.total_analyzed} 篇论文分析</p>`;
                             step.result.analyses.forEach((analysis, i) => {
-                                html += `
-                                    <div style="margin: 10px 0; padding: 10px; background: #f0f7ff; border-radius: 5px;">
-                                        <strong>${i + 1}. ${escapeHtml(analysis.title)}</strong>
-                                        <div class="markdown-content" style="margin-top: 10px;">
-                                            ${renderMarkdown(analysis.analysis.substring(0, 500) + '...')}
-                                        </div>
-                                    </div>
-                                `;
+                                html += `<div style="margin: 10px 0; padding: 10px; background: #f0f7ff; border-radius: 5px;"><strong>${i + 1}. ${escapeHtml(analysis.title)}</strong><div class="markdown-content" style="margin-top: 10px;">${renderMarkdown((analysis.analysis || '').substring(0, 500) + '...')}</div></div>`;
                             });
                         }
 
-                        // 知识图谱结果
                         if (step.result.summary && step.name.includes('KnowledgeGraph')) {
-                            const kg = step.result;
-                            html += `<p>节点 ${kg.total_nodes || 0} 个，关系 ${kg.total_edges || 0} 条</p>`;
-                            html += `<div class="paper-card" style="margin: 12px 0; padding: 14px; background: rgba(79,70,229,0.05);">`;
-                            html += `<strong>主题：</strong>${escapeHtml(kg.summary?.topic || '')}<br>`;
-                            html += `<strong>任务：</strong>${escapeHtml((kg.summary?.main_tasks || []).join('、') || '无')}<br>`;
-                            html += `<strong>方法：</strong>${escapeHtml((kg.summary?.main_methods || []).join('、') || '无')}<br>`;
-                            html += `<strong>数据集：</strong>${escapeHtml((kg.summary?.main_datasets || []).join('、') || '无')}<br>`;
-                            html += `<strong>指标：</strong>${escapeHtml((kg.summary?.common_metrics || []).join('、') || '无')}<br>`;
-                            html += `<strong>局限：</strong>${escapeHtml((kg.summary?.observed_limitations || []).join('、') || '无')}`;
+                            const kg = step.result.knowledge_graph || step.result;
+                            html += `<p>节点 ${kg.total_nodes || step.result.total_nodes || 0} 个，关系 ${kg.total_edges || step.result.total_edges || 0} 条</p>`;
+                            html += `<div class="kg-summary-grid">`;
+                            html += `<div><strong>主题</strong><p>${escapeHtml(kg.summary?.topic || '')}</p></div>`;
+                            html += `<div><strong>任务</strong><p>${escapeHtml((kg.summary?.main_tasks || []).join('、') || '无')}</p></div>`;
+                            html += `<div><strong>方法</strong><p>${escapeHtml((kg.summary?.main_methods || []).join('、') || '无')}</p></div>`;
+                            html += `<div><strong>数据集</strong><p>${escapeHtml((kg.summary?.main_datasets || []).join('、') || '无')}</p></div>`;
                             html += `</div>`;
-                            if (kg.nodes && kg.nodes.length) {
-                                html += `<div style="margin-top:10px;"><strong>节点预览</strong>`;
-                                kg.nodes.slice(0, 8).forEach(node => {
-                                    html += `<div style="margin:8px 0; padding:10px; background:#f8f9fa; border-radius:8px;"><strong>${escapeHtml(node.type)} · ${escapeHtml(node.label)}</strong><div style="font-size:0.9rem; color:var(--muted); margin-top:4px;">${escapeHtml(JSON.stringify(node.properties || {}))}</div></div>`;
-                                });
-                                html += `</div>`;
-                            }
-                            if (kg.edges && kg.edges.length) {
-                                html += `<div style="margin-top:10px;"><strong>关系预览</strong>`;
-                                kg.edges.slice(0, 8).forEach(edge => {
-                                    html += `<div style="margin:8px 0; padding:10px; background:#f8f9fa; border-radius:8px;">${escapeHtml(edge.source)} — ${escapeHtml(edge.type)} → ${escapeHtml(edge.target)}</div>`;
-                                });
-                                html += `</div>`;
-                            }
+                            html += renderKnowledgeGraphSvg(kg);
                         }
 
-                        // 引用结果
                         if (step.result.citations) {
                             html += `<p>生成 ${step.result.total_validated || step.result.total_citations || step.result.citations.length} 条引用</p>`;
                             const citationId = 'citations-' + Date.now();
                             html += `<button class="copy-btn" onclick="copyToClipboard('${citationId}', event)">📋 复制全部引用(Raw)</button>`;
                             html += `<div style="display:flex; flex-direction:column; gap:12px; margin-top:14px;">`;
-                            
                             let rawCitationsText = "";
                             step.result.citations.forEach((citation, i) => {
                                 rawCitationsText += `${i + 1}. ${citation.formatted_citation}\n\n`;
                                 const authorsStr = Array.isArray(citation.authors) ? citation.authors.join(', ') : 'Unknown Authors';
                                 const yearStr = citation.year ? `(${citation.year})` : '';
                                 const urlStr = citation.url ? `<a href="${escapeHtml(citation.url)}" target="_blank" style="color:var(--primary);text-decoration:none;font-size:0.9rem;">[Source]</a>` : '';
-                                
-                                html += `
-                                <div style="background:rgba(255,255,255,0.6); border:1px solid rgba(2,6,23,0.1); border-radius:12px; padding:12px;">
-                                    <div style="font-weight:700; color:var(--text); margin-bottom:6px; font-size:1.05rem;">
-                                        ${escapeHtml(citation.title || 'Untitled')} ${urlStr}
-                                    </div>
-                                    <div style="color:var(--muted); font-size:0.9rem; margin-bottom:8px;">
-                                        ${escapeHtml(authorsStr)} ${escapeHtml(yearStr)}
-                                    </div>
-                                </div>`;
+                                html += `<div style="background:rgba(255,255,255,0.6); border:1px solid rgba(2,6,23,0.1); border-radius:12px; padding:12px;"><div style="font-weight:700; color:var(--text); margin-bottom:6px; font-size:1.05rem;">${escapeHtml(citation.title || 'Untitled')} ${urlStr}</div><div style="color:var(--muted); font-size:0.9rem; margin-bottom:8px;">${escapeHtml(authorsStr)} ${escapeHtml(yearStr)}</div></div>`;
                             });
-                            
                             html += `<div id="${citationId}" style="display:none;">${escapeHtml(rawCitationsText)}</div>`;
                             html += `</div>`;
                         }
 
-                        // 报告结果
                         if (step.result.report) {
                             const reportId = 'report-' + Date.now();
                             html += `<button class="copy-btn" onclick="copyToClipboard('${reportId}', event)">📋 复制报告</button>`;
