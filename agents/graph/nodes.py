@@ -1,5 +1,6 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 import logging
+import re
 from .state import WorkflowState
 
 # 导入现有的路由处理函数
@@ -10,69 +11,65 @@ from api.routes.writing import writing_coach, WritingCoachRequest
 
 logger = logging.getLogger(__name__)
 
+
+def _extract_year(paper: Dict[str, Any]) -> int:
+    """从论文字段中提取年份"""
+    for key in ("published_date", "published", "year"):
+        value = paper.get(key)
+        if not value:
+            continue
+        if isinstance(value, int):
+            return value
+        match = re.search(r"(19|20)\d{2}", str(value))
+        if match:
+            return int(match.group(0))
+    return 0
+
+
 async def hunter_node(state: WorkflowState) -> Dict[str, Any]:
-    """
-    Hunter Agent 节点：负责检索论文
-    """
+    """Hunter Agent 节点：负责检索论文"""
     logger.info(f"LangGraph [Hunter Node]: 开始检索 '{state['keywords']}'")
     try:
-        # 调用现有的搜索逻辑
         search_req = PaperSearchRequest(
             keywords=state["keywords"],
             limit=state["max_results"],
             source="arxiv",
-            sources=["arxiv"]
+            sources=["arxiv"],
         )
         search_result = await search_papers(search_req)
         papers = search_result.get("papers", [])
-
         step_record = {
             "step": 1,
             "name": "Hunter - 文献检索",
             "status": "completed",
-            "result": {
-                "keywords": state["keywords"],
-                "total_found": len(papers),
-                "papers": papers
-            }
+            "result": {"keywords": state["keywords"], "total_found": len(papers), "papers": papers},
         }
         return {"papers": papers, "steps_history": [step_record]}
     except Exception as e:
         logger.error(f"Hunter Node 失败: {str(e)}")
-        step_record = {
-            "step": 1,
-            "name": "Hunter - 文献检索",
-            "status": "failed",
-            "error": str(e)
-        }
-        return {"error": str(e), "steps_history": [step_record]}
+        return {"error": str(e), "steps_history": [{"step": 1, "name": "Hunter - 文献检索", "status": "failed", "error": str(e)}]}
+
 
 async def miner_node(state: WorkflowState) -> Dict[str, Any]:
-    """
-    Miner Agent 节点：负责分析论文
-    """
+    """Miner Agent 节点：负责分析论文"""
     logger.info("LangGraph [Miner Node]: 开始分析论文")
     papers = state.get("papers", [])
     if not papers:
         logger.warning("没有可分析的论文")
-        return {"analyses": [], "steps_history": [{
-            "step": 2, "name": "Miner - 论文分析", "status": "completed", "result": {"total_analyzed": 0, "analyses": []}
-        }]}
+        return {"analyses": [], "steps_history": [{"step": 2, "name": "Miner - 论文分析", "status": "completed", "result": {"total_analyzed": 0, "analyses": []}}]}
 
     analyses = []
     try:
-        # 限制分析前3篇
         for paper in papers[:3]:
             try:
-                analysis_req = PaperAnalysisRequest(
-                    paper_url=paper.get("url", ""),
-                    analysis_type="summary"
-                )
+                analysis_req = PaperAnalysisRequest(paper_url=paper.get("url", ""), analysis_type="summary")
                 analysis_result = await analyze_paper(analysis_req)
                 analyses.append({
-                    "paper_id": paper["id"],
-                    "title": paper["title"],
-                    "analysis": analysis_result.get("analysis", "")
+                    "paper_id": paper.get("id", ""),
+                    "title": paper.get("title", ""),
+                    "authors": paper.get("authors", []),
+                    "year": _extract_year(paper),
+                    "analysis": analysis_result.get("analysis", ""),
                 })
             except Exception as e:
                 logger.warning(f"分析单篇论文失败 {paper.get('title')}: {str(e)}")
@@ -82,129 +79,198 @@ async def miner_node(state: WorkflowState) -> Dict[str, Any]:
             "step": 2,
             "name": "Miner - 论文分析",
             "status": "completed",
-            "result": {
-                "total_analyzed": len(analyses),
-                "analyses": analyses
-            }
+            "result": {"total_analyzed": len(analyses), "analyses": analyses},
         }
         return {"analyses": analyses, "steps_history": [step_record]}
     except Exception as e:
         logger.error(f"Miner Node 失败: {str(e)}")
-        step_record = {
-            "step": 2, "name": "Miner - 论文分析", "status": "failed", "error": str(e)
-        }
-        return {"error": str(e), "steps_history": [step_record]}
+        return {"error": str(e), "steps_history": [{"step": 2, "name": "Miner - 论文分析", "status": "failed", "error": str(e)}]}
 
-async def validator_node(state: WorkflowState) -> Dict[str, Any]:
-    """
-    Validator Agent 节点：负责生成和校验引用
-    """
-    logger.info("LangGraph [Validator Node]: 开始生成引用")
-    papers = state.get("papers", [])
-    if not papers:
-        return {"citations": [], "steps_history": [{
-            "step": 3, "name": "Validator - 引用生成", "status": "completed", "result": {"total_citations": 0, "citations": []}
-        }]}
 
-    citations = []
-    try:
-        # 为前3篇论文生成引用
-        for paper in papers[:3]:
-            try:
-                authors_str = ", ".join(paper["authors"][:3])
-                if len(paper["authors"]) > 3:
-                    authors_str += " et al."
-
-                citation_text = f"{authors_str} ({paper.get('published_date', '')[:4]}). {paper['title']}. arXiv:{paper['id']}"
-
-                req = CitationValidationRequest(
-                    citation=citation_text,
-                    format=state.get("citation_format", "bibtex")
-                )
-                citation_result = await validate_citation(req)
-
-                citations.append({
-                    "paper_id": paper["id"],
-                    "title": paper["title"],
-                    "authors": paper.get("authors", []),
-                    "year": paper.get("published_date", "")[:4] if paper.get("published_date") else "",
-                    "url": paper.get("url", ""),
-                    "formatted_citation": citation_result.get("formatted_citation", "")
-                })
-            except Exception as e:
-                logger.warning(f"生成引用失败: {str(e)}")
-                continue
-
-        step_record = {
-            "step": 3,
-            "name": "Validator - 引用生成",
-            "status": "completed",
-            "result": {
-                "total_citations": len(citations),
-                "citations": citations
-            }
-        }
-        return {"citations": citations, "steps_history": [step_record]}
-    except Exception as e:
-        logger.error(f"Validator Node 失败: {str(e)}")
-        step_record = {
-            "step": 3, "name": "Validator - 引用生成", "status": "failed", "error": str(e)
-        }
-        return {"error": str(e), "steps_history": [step_record]}
-
-async def coach_node(state: WorkflowState) -> Dict[str, Any]:
-    """
-    Coach Agent 节点：负责生成综合报告
-    """
-    logger.info("LangGraph [Coach Node]: 开始生成综合报告")
-    writing_task = state.get("writing_task")
-    if not writing_task:
-        # 如果没有指定写作任务，直接跳过
-        return {"final_report": None}
+async def knowledge_graph_node(state: WorkflowState) -> Dict[str, Any]:
+    """KnowledgeGraphBuilder 节点：从论文和分析结果中抽取知识图谱"""
+    logger.info("LangGraph [KnowledgeGraph Node]: 开始构建知识图谱")
 
     papers = state.get("papers", [])
     analyses = state.get("analyses", [])
-    citations = state.get("citations", [])
+
+    if not papers and not analyses:
+        step_record = {"step": 3, "name": "KnowledgeGraph - 知识图谱构建", "status": "completed", "result": {"total_nodes": 0, "total_edges": 0, "message": "没有可构建图谱的数据"}}
+        return {"knowledge_graph": {"nodes": [], "edges": [], "summary": {"message": "没有可构建图谱的数据"}}, "steps_history": [step_record]}
+
+    nodes: List[Dict[str, Any]] = []
+    edges: List[Dict[str, Any]] = []
+    node_map = set()
+
+    def add_node(node_id: str, node_type: str, label: str, properties: Dict[str, Any] = None):
+        if node_id in node_map:
+            return
+        node_map.add(node_id)
+        nodes.append({"id": node_id, "type": node_type, "label": label, "properties": properties or {}})
+
+    def add_edge(source: str, target: str, edge_type: str, properties: Dict[str, Any] = None):
+        if source and target:
+            edges.append({"source": source, "target": target, "type": edge_type, "properties": properties or {}})
+
+    topic = state.get("keywords", "research topic")
+    topic_node_id = f"topic_{re.sub(r'[^a-zA-Z0-9]+', '_', topic).strip('_').lower() or 'research'}"
+    add_node(topic_node_id, "Topic", topic, {"keywords": topic})
+
+    task_keywords = {
+        "code": ["code generation", "code completion", "program synthesis"],
+        "llm": ["large language models", "foundation models", "instruction tuning"],
+        "retrieval": ["retrieval", "search", "information retrieval"],
+        "reasoning": ["reasoning", "chain of thought", "planning"],
+    }
+    dataset_candidates = [
+        ("dataset_arxiv", "ArXiv"),
+        ("dataset_cora", "Cora"),
+        ("dataset_pubmed", "PubMed"),
+        ("dataset_wmt", "WMT"),
+        ("dataset_imagenet", "ImageNet"),
+        ("dataset_cifar", "CIFAR"),
+        ("dataset_squad", "SQuAD"),
+        ("dataset_glue", "GLUE"),
+        ("dataset_codesearchnet", "CodeSearchNet"),
+        ("dataset_the_stack", "The Stack"),
+    ]
+    metric_candidates = ["Accuracy", "F1", "BLEU", "ROUGE", "AUC", "Precision", "Recall", "pass@k", "Perplexity"]
+    limitation_candidates = ["Data Contamination", "Bias", "Overfitting", "Scalability", "Privacy", "Ethics"]
+
+    detected_tasks = set()
+    detected_methods = set()
+    detected_datasets = set()
+    detected_metrics = set()
+    detected_limitations = set()
+
+    for paper in papers:
+        paper_id = f"paper_{paper.get('id', 'unknown')}"
+        paper_title = paper.get("title", "Unknown Title")
+        paper_text = " ".join([paper_title, paper.get("abstract", ""), str(paper.get("categories", [])), str(paper.get("primary_category", ""))]).lower()
+        add_node(paper_id, "Paper", paper_title, {"title": paper_title, "authors": paper.get("authors", []), "year": _extract_year(paper), "source": paper.get("source", "arxiv"), "url": paper.get("url", "")})
+        add_edge(paper_id, topic_node_id, "ADDRESSES", {"evidence": "paper matched current search topic"})
+
+        for task_name, keywords_list in task_keywords.items():
+            if any(keyword in paper_text for keyword in keywords_list):
+                task_id = f"task_{task_name}"
+                task_label = task_name.replace("_", " ").title()
+                add_node(task_id, "Task", task_label, {"description": task_label})
+                add_edge(paper_id, task_id, "ADDRESSES", {"evidence": f"matched {task_name}"})
+                detected_tasks.add(task_label)
+
+        if any(keyword in paper_text for keyword in ["transformer", "attention"]):
+            add_node("method_transformer", "Method", "Transformer", {"description": "Attention-based sequence modeling"})
+            add_edge(paper_id, "method_transformer", "USES_METHOD", {"evidence": "matched transformer/attention"})
+            detected_methods.add("Transformer")
+
+        if any(keyword in paper_text for keyword in ["bert", "pretrain", "pre-trained", "pretraining"]):
+            add_node("method_pretraining", "Method", "Pretraining", {"description": "Pre-trained language modeling"})
+            add_edge(paper_id, "method_pretraining", "USES_METHOD", {"evidence": "matched pretraining"})
+            detected_methods.add("Pretraining")
+
+        for dataset_id, dataset_label in dataset_candidates:
+            if dataset_label.lower() in paper_text:
+                add_node(dataset_id, "Dataset", dataset_label, {"domain": "academic dataset"})
+                add_edge(paper_id, dataset_id, "USES_DATASET", {"evidence": f"matched {dataset_label}"})
+                detected_datasets.add(dataset_label)
+
+        for metric_label in metric_candidates:
+            if metric_label.lower() in paper_text:
+                metric_id = f"metric_{re.sub(r'[^a-zA-Z0-9]+', '_', metric_label).lower()}"
+                add_node(metric_id, "Metric", metric_label, {"description": f"Evaluation metric: {metric_label}"})
+                add_edge(paper_id, metric_id, "EVALUATED_BY", {"evidence": f"matched {metric_label}"})
+                detected_metrics.add(metric_label)
+
+        for limitation_label in limitation_candidates:
+            if limitation_label.lower() in paper_text:
+                limitation_id = f"limitation_{re.sub(r'[^a-zA-Z0-9]+', '_', limitation_label).lower()}"
+                add_node(limitation_id, "Limitation", limitation_label, {"description": limitation_label})
+                add_edge(paper_id, limitation_id, "HAS_LIMITATION", {"evidence": f"matched {limitation_label}"})
+                detected_limitations.add(limitation_label)
+
+    summary = {
+        "topic": topic,
+        "paper_count": len(papers),
+        "analysis_count": len(analyses),
+        "main_tasks": sorted(detected_tasks),
+        "main_methods": sorted(detected_methods),
+        "main_datasets": sorted(detected_datasets),
+        "common_metrics": sorted(detected_metrics),
+        "observed_limitations": sorted(detected_limitations),
+    }
+    step_record = {"step": 3, "name": "KnowledgeGraph - 知识图谱构建", "status": "completed", "result": {"total_nodes": len(nodes), "total_edges": len(edges), "summary": summary}}
+    return {"knowledge_graph": {"nodes": nodes, "edges": edges, "summary": summary}, "steps_history": [step_record]}
+
+
+async def validator_node(state: WorkflowState) -> Dict[str, Any]:
+    """Validator Agent 节点：负责校验引用"""
+    logger.info("LangGraph [Validator Node]: 开始校验引用")
+    analyses = state.get("analyses", [])
+    if not analyses:
+        return {"citations": [], "steps_history": [{"step": 4, "name": "Validator - 引用校验", "status": "completed", "result": {"total_validated": 0, "citations": []}}]}
+
+    citations = []
+    try:
+        for analysis in analyses[:3]:
+            citation_req = CitationValidationRequest(
+                citation=str({
+                    "title": analysis.get("title", ""),
+                    "authors": analysis.get("authors", []),
+                    "year": analysis.get("year", 2024),
+                    "journal": "",
+                    "doi": "",
+                    "arxiv_id": "",
+                }),
+                format=state.get("citation_format", "bibtex"),
+            )
+            citation_result = await validate_citation(citation_req)
+            citations.append({
+                "title": analysis.get("title", "Unknown Title"),
+                "authors": analysis.get("authors", []),
+                "year": analysis.get("year", 2024),
+                "formatted_citation": citation_result.get("formatted_citation", citation_result.get("citation", "")),
+                "raw_result": citation_result,
+            })
+
+        step_record = {"step": 4, "name": "Validator - 引用校验", "status": "completed", "result": {"total_validated": len(citations), "citations": citations}}
+        return {"citations": citations, "steps_history": [step_record]}
+    except Exception as e:
+        logger.error(f"Validator Node 失败: {str(e)}")
+        return {"error": str(e), "steps_history": [{"step": 4, "name": "Validator - 引用校验", "status": "failed", "error": str(e)}]}
+
+
+async def coach_node(state: WorkflowState) -> Dict[str, Any]:
+    """Coach Agent 节点：负责生成最终报告"""
+    logger.info("LangGraph [Coach Node]: 开始生成报告")
     keywords = state.get("keywords", "")
+    analyses = state.get("analyses", [])
+    knowledge_graph = state.get("knowledge_graph", {})
 
     try:
-        # 组装上下文给 Coach
-        report_text = f"# 关于 '{keywords}' 的研究综述\n\n"
-        report_text += f"## 搜索结果\n找到 {len(papers)} 篇相关论文\n\n"
+        if not analyses:
+            report_text = f"# 关于 '{keywords}' 的研究综述\n\n暂无足够分析结果生成详细报告。"
+            return {"final_report": report_text, "steps_history": [{"step": 5, "name": "Coach - 报告生成", "status": "completed", "result": {"report_length": len(report_text), "report": report_text}}]}
 
-        if analyses:
-            report_text += "## 论文分析\n"
-            for i, analysis in enumerate(analyses[:3], 1):
-                report_text += f"\n### {i}. {analysis['title']}\n"
-                report_text += f"{analysis['analysis'][:500]}...\n"
+        prompt = f"""
+请基于以下论文分析和知识图谱，生成一份结构化的学术研究综述。
 
-        if citations:
-            report_text += "\n## 参考文献\n"
-            for i, citation in enumerate(citations, 1):
-                report_text += f"{i}. {citation['formatted_citation']}\n"
+研究主题: {keywords}
 
-        req = WritingCoachRequest(
-            text=report_text,
-            style="academic",
-            task=writing_task,
-            special_requirements=state.get("special_requirements")
-        )
-        writing_result = await writing_coach(req)
+论文分析:
+{analyses}
+
+知识图谱摘要:
+{knowledge_graph.get('summary', {})}
+
+要求：
+1. 包含研究背景、核心方法、关键发现、研究空白和未来方向
+2. 如有知识图谱中的方法/数据集/任务/指标信息，请自然融入综述
+3. 输出 Markdown 格式
+"""
+        writing_result = await writing_coach(WritingCoachRequest(text=prompt, style="formal", task="improve", special_requirements=state.get("special_requirements")))
         final_report = writing_result.get("result", "")
-
-        step_record = {
-            "step": 4,
-            "name": "Coach - 报告生成",
-            "status": "completed",
-            "result": {
-                "report_length": len(final_report),
-                "report": final_report
-            }
-        }
+        step_record = {"step": 5, "name": "Coach - 报告生成", "status": "completed", "result": {"report_length": len(final_report), "report": final_report}}
         return {"final_report": final_report, "steps_history": [step_record]}
     except Exception as e:
         logger.error(f"Coach Node 失败: {str(e)}")
-        step_record = {
-            "step": 4, "name": "Coach - 报告生成", "status": "failed", "error": str(e)
-        }
-        return {"error": str(e), "steps_history": [step_record]}
+        return {"error": str(e), "steps_history": [{"step": 5, "name": "Coach - 报告生成", "status": "failed", "error": str(e)}]}

@@ -1951,37 +1951,62 @@
                             });
                         }
 
+                        // 知识图谱结果
+                        if (step.result.summary && step.name.includes('KnowledgeGraph')) {
+                            const kg = step.result;
+                            html += `<p>节点 ${kg.total_nodes || 0} 个，关系 ${kg.total_edges || 0} 条</p>`;
+                            html += `<div class="paper-card" style="margin: 12px 0; padding: 14px; background: rgba(79,70,229,0.05);">`;
+                            html += `<strong>主题：</strong>${escapeHtml(kg.summary?.topic || '')}<br>`;
+                            html += `<strong>任务：</strong>${escapeHtml((kg.summary?.main_tasks || []).join('、') || '无')}<br>`;
+                            html += `<strong>方法：</strong>${escapeHtml((kg.summary?.main_methods || []).join('、') || '无')}<br>`;
+                            html += `<strong>数据集：</strong>${escapeHtml((kg.summary?.main_datasets || []).join('、') || '无')}<br>`;
+                            html += `<strong>指标：</strong>${escapeHtml((kg.summary?.common_metrics || []).join('、') || '无')}<br>`;
+                            html += `<strong>局限：</strong>${escapeHtml((kg.summary?.observed_limitations || []).join('、') || '无')}`;
+                            html += `</div>`;
+                            if (kg.nodes && kg.nodes.length) {
+                                html += `<div style="margin-top:10px;"><strong>节点预览</strong>`;
+                                kg.nodes.slice(0, 8).forEach(node => {
+                                    html += `<div style="margin:8px 0; padding:10px; background:#f8f9fa; border-radius:8px;"><strong>${escapeHtml(node.type)} · ${escapeHtml(node.label)}</strong><div style="font-size:0.9rem; color:var(--muted); margin-top:4px;">${escapeHtml(JSON.stringify(node.properties || {}))}</div></div>`;
+                                });
+                                html += `</div>`;
+                            }
+                            if (kg.edges && kg.edges.length) {
+                                html += `<div style="margin-top:10px;"><strong>关系预览</strong>`;
+                                kg.edges.slice(0, 8).forEach(edge => {
+                                    html += `<div style="margin:8px 0; padding:10px; background:#f8f9fa; border-radius:8px;">${escapeHtml(edge.source)} — ${escapeHtml(edge.type)} → ${escapeHtml(edge.target)}</div>`;
+                                });
+                                html += `</div>`;
+                            }
+                        }
+
                         // 引用结果
                         if (step.result.citations) {
-                        html += `<p>生成 ${step.result.total_citations} 条引用</p>`;
-                        const citationId = 'citations-' + Date.now();
-                        html += `<button class="copy-btn" onclick="copyToClipboard('${citationId}', event)">📋 复制全部引用(Raw)</button>`;
-                        html += `<div style="display:flex; flex-direction:column; gap:12px; margin-top:14px;">`;
-                        
-                        let rawCitationsText = "";
-                        step.result.citations.forEach((citation, i) => {
-                            rawCitationsText += `${i + 1}. ${citation.formatted_citation}\n\n`;
+                            html += `<p>生成 ${step.result.total_validated || step.result.total_citations || step.result.citations.length} 条引用</p>`;
+                            const citationId = 'citations-' + Date.now();
+                            html += `<button class="copy-btn" onclick="copyToClipboard('${citationId}', event)">📋 复制全部引用(Raw)</button>`;
+                            html += `<div style="display:flex; flex-direction:column; gap:12px; margin-top:14px;">`;
                             
-                            // Render a nice card for the UI
-                            const authorsStr = Array.isArray(citation.authors) ? citation.authors.join(', ') : 'Unknown Authors';
-                            const yearStr = citation.year ? `(${citation.year})` : '';
-                            const urlStr = citation.url ? `<a href="${escapeHtml(citation.url)}" target="_blank" style="color:var(--primary);text-decoration:none;font-size:0.9rem;">[Source]</a>` : '';
+                            let rawCitationsText = "";
+                            step.result.citations.forEach((citation, i) => {
+                                rawCitationsText += `${i + 1}. ${citation.formatted_citation}\n\n`;
+                                const authorsStr = Array.isArray(citation.authors) ? citation.authors.join(', ') : 'Unknown Authors';
+                                const yearStr = citation.year ? `(${citation.year})` : '';
+                                const urlStr = citation.url ? `<a href="${escapeHtml(citation.url)}" target="_blank" style="color:var(--primary);text-decoration:none;font-size:0.9rem;">[Source]</a>` : '';
+                                
+                                html += `
+                                <div style="background:rgba(255,255,255,0.6); border:1px solid rgba(2,6,23,0.1); border-radius:12px; padding:12px;">
+                                    <div style="font-weight:700; color:var(--text); margin-bottom:6px; font-size:1.05rem;">
+                                        ${escapeHtml(citation.title || 'Untitled')} ${urlStr}
+                                    </div>
+                                    <div style="color:var(--muted); font-size:0.9rem; margin-bottom:8px;">
+                                        ${escapeHtml(authorsStr)} ${escapeHtml(yearStr)}
+                                    </div>
+                                </div>`;
+                            });
                             
-                            html += `
-                            <div style="background:rgba(255,255,255,0.6); border:1px solid rgba(2,6,23,0.1); border-radius:12px; padding:12px;">
-                                <div style="font-weight:700; color:var(--text); margin-bottom:6px; font-size:1.05rem;">
-                                    ${escapeHtml(citation.title)} ${urlStr}
-                                </div>
-                                <div style="color:var(--muted); font-size:0.9rem; margin-bottom:8px;">
-                                    ${escapeHtml(authorsStr)} ${escapeHtml(yearStr)}
-                                </div>
-                            </div>`;
-                        });
-                        
-                        // Hidden container for the "Copy All" button to grab
-                        html += `<div id="${citationId}" style="display:none;">${escapeHtml(rawCitationsText)}</div>`;
-                        html += `</div>`;
-                    }
+                            html += `<div id="${citationId}" style="display:none;">${escapeHtml(rawCitationsText)}</div>`;
+                            html += `</div>`;
+                        }
 
                         // 报告结果
                         if (step.result.report) {
