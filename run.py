@@ -17,14 +17,14 @@ def main():
     sys.path.insert(0, str(current_dir))
 
     # Start server with the full API
-    print("Server will be available at: http://localhost:8000")
-    print("API docs at: http://localhost:8000/docs")
-    print("Health check at: http://localhost:8000/health")
+    print("Server will be available at: http://localhost:8001")
+    print("API docs at: http://localhost:8001/docs")
+    print("Health check at: http://localhost:8001/health")
 
     uvicorn.run(
         "api.main:app",
         host="0.0.0.0",
-        port=8000,
+        port=8001,
         reload=True,
         log_level="info"
     )
