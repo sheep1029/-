@@ -1,6 +1,5 @@
 """
-InnoCore AI 前哨探员 (Hunter Agent)
-负责每日根据关键词监控ArXiv/IEEE，初筛并下载PDF
+第一步：论文抓取
 """
 
 import asyncio

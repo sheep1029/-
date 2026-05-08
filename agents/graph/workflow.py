@@ -1,3 +1,6 @@
+"""
+LangGraph 工作流定义：定义多智能体协同的有向图结构。
+"""
 from langgraph.graph import StateGraph, START, END
 import logging
 

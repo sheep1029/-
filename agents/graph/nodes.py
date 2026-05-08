@@ -1,3 +1,6 @@
+"""
+LangGraph 工作流节点：包含各个智能体在图流转中的具体执行逻辑。
+"""
 from typing import Dict, Any, List
 import logging
 import re
@@ -112,30 +115,55 @@ async def knowledge_graph_node(state: WorkflowState) -> Dict[str, Any]:
         if source and target:
             edges.append({"source": source, "target": target, "type": edge_type, "properties": properties or {}})
 
+    # 设置中心节点（搜索关键词）
     topic = state.get("keywords", "research topic")
     topic_node_id = f"topic_{re.sub(r'[^a-zA-Z0-9]+', '_', topic).strip('_').lower() or 'research'}"
     add_node(topic_node_id, "Topic", topic, {"keywords": topic})
 
     task_keywords = {
-        "code": ["code generation", "code completion", "program synthesis"],
-        "llm": ["large language models", "foundation models", "instruction tuning"],
-        "retrieval": ["retrieval", "search", "information retrieval"],
-        "reasoning": ["reasoning", "chain of thought", "planning"],
+        # 任务类型映射：字典的 key 是内部的短标识，value 是该任务可能在论文中出现的同义关键词列表
+        "code": ["code generation", "code completion", "program synthesis"],  # 代码相关任务：代码生成、代码补全、程序综合
+        "llm": ["large language models", "foundation models", "instruction tuning"],  # 大语言模型相关任务：大模型、基础模型、指令微调
+        "retrieval": ["retrieval", "search", "information retrieval"],  # 检索相关任务：检索、搜索、信息检索
+        "reasoning": ["reasoning", "chain of thought", "planning"],  # 推理相关任务：推理、思维链、规划
     }
+    
     dataset_candidates = [
-        ("dataset_arxiv", "ArXiv"),
-        ("dataset_cora", "Cora"),
-        ("dataset_pubmed", "PubMed"),
-        ("dataset_wmt", "WMT"),
-        ("dataset_imagenet", "ImageNet"),
-        ("dataset_cifar", "CIFAR"),
-        ("dataset_squad", "SQuAD"),
-        ("dataset_glue", "GLUE"),
-        ("dataset_codesearchnet", "CodeSearchNet"),
-        ("dataset_the_stack", "The Stack"),
+        # 预设的知名数据集列表，格式为：(节点ID标识, 数据集显示名称)
+        ("dataset_arxiv", "ArXiv"),  # 学术论文数据集
+        ("dataset_cora", "Cora"),  # 论文引用网络数据集
+        ("dataset_pubmed", "PubMed"),  # 生物医学文献数据集
+        ("dataset_wmt", "WMT"),  # 机器翻译评估数据集
+        ("dataset_imagenet", "ImageNet"),  # 计算机视觉图像分类数据集
+        ("dataset_cifar", "CIFAR"),  # 计算机视觉图像数据集 (CIFAR-10/100)
+        ("dataset_squad", "SQuAD"),  # 斯坦福问答数据集
+        ("dataset_glue", "GLUE"),  # 通用语言理解评估基准
+        ("dataset_codesearchnet", "CodeSearchNet"),  # 代码搜索与理解数据集
+        ("dataset_the_stack", "The Stack"),  # 大规模代码预训练数据集
     ]
-    metric_candidates = ["Accuracy", "F1", "BLEU", "ROUGE", "AUC", "Precision", "Recall", "pass@k", "Perplexity"]
-    limitation_candidates = ["Data Contamination", "Bias", "Overfitting", "Scalability", "Privacy", "Ethics"]
+    
+    # 预设的常用评估指标列表
+    metric_candidates = [
+        "Accuracy",  # 准确率，常用于分类任务
+        "F1",  # F1分数，精确率和召回率的调和平均，常用于分类和检索
+        "BLEU",  # 机器翻译常用评估指标
+        "ROUGE",  # 文本摘要常用评估指标
+        "AUC",  # ROC曲线下面积，用于评估二分类模型
+        "Precision",  # 精确率
+        "Recall",  # 召回率
+        "pass@k",  # 代码生成任务常用评估指标
+        "Perplexity"  # 困惑度，语言模型常用评估指标
+    ]
+    
+    # 预设的常见研究局限性或挑战列表
+    limitation_candidates = [
+        "Data Contamination",  # 数据污染（例如测试集泄露到训练集中）
+        "Bias",  # 模型或数据偏见
+        "Overfitting",  # 过拟合
+        "Scalability",  # 可扩展性问题
+        "Privacy",  # 隐私保护问题
+        "Ethics"  # 伦理道德问题
+    ]
 
     detected_tasks = set()
     detected_methods = set()

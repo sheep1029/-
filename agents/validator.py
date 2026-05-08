@@ -1,6 +1,5 @@
 """
-InnoCore AI 校验官 (Validator Agent)
-负责生成引用格式并联网校验元数据
+第四步：引用校验
 """
 
 import asyncio

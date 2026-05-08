@@ -25,24 +25,28 @@ except Exception as e:
 
 # Pydantic模型
 class AnalysisRequest(BaseModel):
-    paper_id: str
-    user_id: Optional[str] = None
-    analysis_type: str = "full"  # full, quick, innovation_only
+    """通用论文分析请求模型"""
+    paper_id: str  # 必填：待分析的论文唯一标识符（如 ArXiv ID 或本地系统 ID）
+    user_id: Optional[str] = None  # 可选：发起请求的用户 ID，用于关联历史记录或偏好
+    analysis_type: str = "full"  # 可选：分析的深度模式。可选值：full(全面深度分析), quick(快速摘要), innovation_only(仅提取创新点)
 
 class ComparisonRequest(BaseModel):
-    paper_ids: List[str]
-    user_id: Optional[str] = None
-    comparison_aspects: List[str] = ["method", "results", "innovation"]
+    """多篇论文对比分析请求模型"""
+    paper_ids: List[str]  # 必填：需要进行对比的多篇论文 ID 列表（通常至少传2个）
+    user_id: Optional[str] = None  # 可选：发起请求的用户 ID
+    comparison_aspects: List[str] = ["method", "results", "innovation"]  # 可选：指定需要对比的维度，默认对比方法、结果和创新点
 
 class InnovationSearchRequest(BaseModel):
-    query: str
-    user_id: Optional[str] = None
-    search_scope: str = "both"  # l1, l2, both
-    top_k: int = 10
+    """创新点/研究空白检索请求模型"""
+    query: str  # 必填：用户的检索查询词或描述的一段研究想法
+    user_id: Optional[str] = None  # 可选：发起请求的用户 ID
+    search_scope: str = "both"  # 可选：检索的范围。可选值：l1(基于标题/摘要), l2(基于全文), both(综合检索)
+    top_k: int = 10  # 可选：期望返回的最相关/最具创新机会的结果数量
 
 class PaperAnalysisRequest(BaseModel):
-    paper_url: str
-    analysis_type: str = "summary"  # summary, innovation, comparison, comprehensive
+    """单篇论文解析与分析请求模型（支持URL或本地路径）"""
+    paper_url: str  # 必填：论文的来源路径。可以是 ArXiv 链接、DOI 链接，或者本地系统中的 /uploads/xxx.pdf 路径
+    analysis_type: str = "summary"  # 可选：指定的具体分析任务。可选值：summary(摘要提取), innovation(创新点分析), comparison(对比分析), comprehensive(综合分析)
 
 @router.post("/analyze", response_model=Dict[str, Any])
 async def analyze_paper(request: PaperAnalysisRequest):

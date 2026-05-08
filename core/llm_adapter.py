@@ -22,7 +22,6 @@ class LLMAdapter:
         try:
             from hello_agents import HelloAgentsLLM
             
-            # 根据文档，HelloAgentsLLM 的初始化参数
             self.llm = HelloAgentsLLM(
                 model=self.config.llm.model_name,
                 api_key=self.config.llm.api_key,
@@ -41,8 +40,7 @@ class LLMAdapter:
     
     def _format_messages(self, prompt: str) -> list:
         """
-        将提示词格式化为消息列表
-        
+        标准化prompt格式
         Args:
             prompt: 提示词字符串
             

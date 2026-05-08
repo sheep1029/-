@@ -1,6 +1,5 @@
 """
-InnoCore AI 智能体控制器
-负责四大智能体的协同调度和任务编排
+Agent的调度
 """
 
 import asyncio
