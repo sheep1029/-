@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 InnoCore AI - Simple Run Script
-研创·智研 - 简单运行脚本
+简单运行脚本
 """
 
 import sys

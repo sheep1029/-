@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-InnoCore AI - Simple Setup Script
+Simple Setup Script
 """
 
 import subprocess
