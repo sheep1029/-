@@ -4,8 +4,11 @@ LangGraph 工作流节点：包含各个智能体在图流转中的具体执行�
 from typing import Dict, Any, List
 import logging
 import re
+import json
+import asyncio
 from .state import WorkflowState
 
+from core.llm_adapter import get_llm_adapter
 # 导入现有的路由处理函数
 from api.routes.papers import search_papers, PaperSearchRequest
 from api.routes.analysis import analyze_paper, PaperAnalysisRequest
@@ -215,6 +218,91 @@ async def knowledge_graph_node(state: WorkflowState) -> Dict[str, Any]:
                 add_node(limitation_id, "Limitation", limitation_label, {"description": limitation_label})
                 add_edge(paper_id, limitation_id, "HAS_LIMITATION", {"evidence": f"matched {limitation_label}"})
                 detected_limitations.add(limitation_label)
+
+    # ==== LLM 兜底抽取逻辑开始 ====
+    try:
+        from core.config import get_config
+        config = get_config()
+        llm = get_llm_adapter() if config.llm.api_key else None
+    except Exception as e:
+        logger.warning(f"获取 LLM 适配器失败，跳过 LLM 兜底抽取: {e}")
+        llm = None
+
+    if llm and analyses:
+        logger.info("LangGraph [KnowledgeGraph Node]: 启动 LLM 兜底抽取实体")
+
+        async def extract_entities_for_paper(analysis_dict: Dict[str, Any]) -> tuple:
+            paper_id = f"paper_{analysis_dict.get('paper_id', 'unknown')}"
+            text = f"Title: {analysis_dict.get('title', '')}\nAbstract/Analysis: {analysis_dict.get('analysis', '')}"
+            prompt = f"""
+请从以下学术论文分析文本中提取核心的结构化学术实体。
+不要提取太宽泛的词汇，重点提取以下类别中未被充分涵盖的具体专业词汇：
+- tasks: 具体的研究任务（如：指令微调，知识蒸馏，图像分割等）
+- methods: 使用的具体算法、模型或技术名称（如：LoRA, ResNet, PPO等）
+- datasets: 使用的数据集名称
+- metrics: 评估指标名称
+- limitations: 具体的局限性或挑战
+
+必须严格只输出合法的 JSON 对象，不包含任何 Markdown 标记或多余的文字说明，格式如下：
+{{
+    "tasks": ["任务1", "任务2"],
+    "methods": ["方法1"],
+    "datasets": [],
+    "metrics": ["指标1"],
+    "limitations": []
+}}
+
+文本内容：
+{text}
+"""
+            try:
+                res = await llm.ainvoke(prompt)
+                # 清理返回文本中的 markdown 代码块标记
+                cleaned = re.sub(r'```json|```', '', res).strip()
+                return paper_id, json.loads(cleaned)
+            except Exception as e:
+                logger.warning(f"LLM entity extraction failed for {paper_id}: {e}")
+                return paper_id, {}
+
+        # 并发请求 LLM
+        tasks_list = [extract_entities_for_paper(a) for a in analyses]
+        llm_results = await asyncio.gather(*tasks_list)
+
+        for paper_id, entities in llm_results:
+            if not entities:
+                continue
+            
+            # 将 LLM 抽取到的实体补充进图谱
+            for t in entities.get("tasks", []):
+                t_id = f"task_{re.sub(r'[^a-zA-Z0-9]+', '_', t).lower()}"
+                add_node(t_id, "Task", t.title(), {"description": t})
+                add_edge(paper_id, t_id, "ADDRESSES", {"evidence": "LLM extracted"})
+                detected_tasks.add(t.title())
+                
+            for m in entities.get("methods", []):
+                m_id = f"method_{re.sub(r'[^a-zA-Z0-9]+', '_', m).lower()}"
+                add_node(m_id, "Method", m.title(), {"description": m})
+                add_edge(paper_id, m_id, "USES_METHOD", {"evidence": "LLM extracted"})
+                detected_methods.add(m.title())
+                
+            for d in entities.get("datasets", []):
+                d_id = f"dataset_{re.sub(r'[^a-zA-Z0-9]+', '_', d).lower()}"
+                add_node(d_id, "Dataset", d, {"domain": "academic dataset"})
+                add_edge(paper_id, d_id, "USES_DATASET", {"evidence": "LLM extracted"})
+                detected_datasets.add(d)
+                
+            for m in entities.get("metrics", []):
+                m_id = f"metric_{re.sub(r'[^a-zA-Z0-9]+', '_', m).lower()}"
+                add_node(m_id, "Metric", m, {"description": f"Evaluation metric: {m}"})
+                add_edge(paper_id, m_id, "EVALUATED_BY", {"evidence": "LLM extracted"})
+                detected_metrics.add(m)
+                
+            for l in entities.get("limitations", []):
+                l_id = f"limitation_{re.sub(r'[^a-zA-Z0-9]+', '_', l).lower()}"
+                add_node(l_id, "Limitation", l, {"description": l})
+                add_edge(paper_id, l_id, "HAS_LIMITATION", {"evidence": "LLM extracted"})
+                detected_limitations.add(l)
+    # ==== LLM 兜底抽取逻辑结束 ====
 
     summary = {
         "topic": topic,
